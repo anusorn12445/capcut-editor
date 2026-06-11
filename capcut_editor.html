@@ -430,6 +430,7 @@ select,input[type=text],input[type=number]{color-scheme:dark;}
             <option value="Xenova/whisper-base" selected>⭐ สมดุล (base)</option>
             <option value="Xenova/whisper-small">🎯 แม่นสุด (small)</option>
           </select>
+          <span class="achip" id="asrEngineChip" onclick="openSubtitleSetup()" title="เลือก/เชื่อมต่อเครื่องมือถอดเสียง (Whisper API จริง)"><i class="ti ti-plug" style="font-size:11px;"></i> <span id="asrEngineLabel">Whisper: ในเครื่อง</span></span>
           <span class="achip" onclick="qai('transition')">Transitions</span>
           <span class="achip achip-voice" onclick="openVoiceClone()"><i class="ti ti-microphone" style="font-size:11px;"></i> Clone Voice</span>
           <span class="achip" onclick="openVoiceSetup()"><i class="ti ti-plug" style="font-size:11px;"></i> เชื่อมต่อเสียง</span>
@@ -671,6 +672,52 @@ select,input[type=text],input[type=number]{color-scheme:dark;}
       <button class="mbtn" onclick="testVoiceConnection()">ทดสอบ</button>
       <button class="mbtn" onclick="closeVoiceSetup()">ปิด</button>
       <button class="mbtn red" onclick="saveVoiceSetup()">บันทึก</button>
+    </div>
+  </div>
+</div>
+
+<!-- Subtitle Engine (Whisper) setup modal -->
+<div class="modal-bg" id="subtitleSetupModal">
+  <div class="modal" style="width:400px;max-height:86vh;overflow-y:auto;">
+    <div class="modal-title"><i class="ti ti-closed-caption"></i> เชื่อมต่อ Subtitle (Whisper)</div>
+    <div style="font-size:11px;color:var(--text3);margin-bottom:12px;line-height:1.5;">เลือกเครื่องมือถอดเสียง — <b>ในเครื่อง</b>ฟรีแต่แม่นน้อย, ต่อ <b>Whisper API</b> จริงแม่นกว่ามาก (รองรับไทย + word timestamps)</div>
+    <div id="asrList">
+      <div class="vp-card" data-prov="local" onclick="selectAsrProvider('local')">
+        <div class="vp-head"><div class="vp-radio"></div><span class="vp-name">🌐 ในเครื่อง (on-device)</span><span class="vp-badge free">ฟรี</span></div>
+        <div class="vp-desc">Whisper รันในเบราว์เซอร์ (tiny/base/small) — เลือกระดับจาก dropdown ข้างปุ่ม Subtitle ไม่ต้องมี key</div>
+      </div>
+      <div class="vp-card" data-prov="openai" onclick="selectAsrProvider('openai')">
+        <div class="vp-head"><div class="vp-radio"></div><span class="vp-name">⚡ OpenAI Whisper</span><span class="vp-badge key">ต้องมี API Key</span></div>
+        <div class="vp-desc">โมเดล whisper-1 (large-v2) แม่นสุด รองรับ<b>ไทย</b> + word timestamps</div>
+        <div class="vp-fields">
+          <input id="cfg-asrOpenaiKey" type="password" placeholder="sk-...">
+          <div class="hint">จาก platform.openai.com → API keys</div>
+        </div>
+      </div>
+      <div class="vp-card" data-prov="groq" onclick="selectAsrProvider('groq')">
+        <div class="vp-head"><div class="vp-radio"></div><span class="vp-name">🚀 Groq Whisper</span><span class="vp-badge key">ต้องมี API Key</span></div>
+        <div class="vp-desc">whisper-large-v3 เร็วมาก + มี <b>free tier</b> รองรับไทย (CORS เปิด ใช้บน browser ได้)</div>
+        <div class="vp-fields">
+          <input id="cfg-asrGroqKey" type="password" placeholder="gsk_...">
+          <div class="hint">สมัครฟรีที่ console.groq.com → API Keys</div>
+        </div>
+      </div>
+      <div class="vp-card" data-prov="custom" onclick="selectAsrProvider('custom')">
+        <div class="vp-head"><div class="vp-radio"></div><span class="vp-name">🖥️ Custom / Self-host</span><span class="vp-badge self">เซิร์ฟเวอร์เอง</span></div>
+        <div class="vp-desc">endpoint แบบ OpenAI-compatible (whisper.cpp / faster-whisper-server)</div>
+        <div class="vp-fields">
+          <input id="cfg-asrCustomUrl" type="text" placeholder="https://your-server/v1/audio/transcriptions">
+          <input id="cfg-asrCustomModel" type="text" placeholder="model เช่น Systran/faster-whisper-large-v3">
+          <input id="cfg-asrCustomKey" type="password" placeholder="API key (ถ้ามี)">
+          <div class="hint">ส่ง multipart: <b>file</b>(wav) + <b>model</b>, response_format=verbose_json</div>
+        </div>
+      </div>
+    </div>
+    <div class="exp-stat" id="asrTestStat" style="display:none;"></div>
+    <div class="mactions">
+      <button class="mbtn" onclick="testAsrConnection()">ทดสอบ</button>
+      <button class="mbtn" onclick="closeSubtitleSetup()">ปิด</button>
+      <button class="mbtn red" onclick="saveSubtitleSetup()">บันทึก</button>
     </div>
   </div>
 </div>
@@ -2022,6 +2069,137 @@ function groupWordsIntoLines(words) {
   return out.map(l => ({ text: l.text, timestamp: [l.s, l.e] }));
 }
 
+// ═══════════════════════════════════════════
+//  SUBTITLE ENGINE — เชื่อมต่อ Whisper API จริง (OpenAI / Groq / custom)
+// ═══════════════════════════════════════════
+const ASR_PRESETS = {
+  openai: { base: 'https://api.openai.com/v1', model: 'whisper-1',        label: 'OpenAI Whisper' },
+  groq:   { base: 'https://api.groq.com/openai/v1', model: 'whisper-large-v3', label: 'Groq Whisper' },
+};
+let asrCfg = {};
+try { asrCfg = JSON.parse(localStorage.getItem('asrCfg') || '{}'); } catch (e) { asrCfg = {}; }
+if (!asrCfg.provider) asrCfg.provider = 'local';
+
+function asrProviderName(p) {
+  return { local: 'ในเครื่อง (on-device)', openai: 'OpenAI Whisper', groq: 'Groq Whisper', custom: 'Custom Server' }[p] || p;
+}
+function updateAsrBadge() {
+  const el = document.getElementById('asrEngineLabel');
+  if (el) el.textContent = 'Whisper: ' + asrProviderName(asrCfg.provider);
+  const sq = document.getElementById('subQuality');
+  if (sq) sq.style.display = (asrCfg.provider === 'local') ? '' : 'none'; // dropdown ระดับโมเดลใช้เฉพาะ on-device
+}
+
+// Float32 mono → WAV (PCM16) สำหรับส่งขึ้น API
+function encodeWav16(samples, sampleRate) {
+  const len = samples.length;
+  const buf = new ArrayBuffer(44 + len * 2);
+  const dv = new DataView(buf);
+  const wr = (o, s) => { for (let i = 0; i < s.length; i++) dv.setUint8(o + i, s.charCodeAt(i)); };
+  wr(0, 'RIFF'); dv.setUint32(4, 36 + len * 2, true); wr(8, 'WAVE'); wr(12, 'fmt ');
+  dv.setUint32(16, 16, true); dv.setUint16(20, 1, true); dv.setUint16(22, 1, true);
+  dv.setUint32(24, sampleRate, true); dv.setUint32(28, sampleRate * 2, true);
+  dv.setUint16(32, 2, true); dv.setUint16(34, 16, true); wr(36, 'data'); dv.setUint32(40, len * 2, true);
+  let o = 44;
+  for (let i = 0; i < len; i++) { let s = Math.max(-1, Math.min(1, samples[i])); dv.setInt16(o, s < 0 ? s * 0x8000 : s * 0x7FFF, true); o += 2; }
+  return new Blob([buf], { type: 'audio/wav' });
+}
+
+// คืนค่า {url, model, key} ของ provider ปัจจุบัน
+function asrEndpoint(cfg) {
+  if (cfg.provider === 'custom') {
+    let url = (cfg.customUrl || '').trim();
+    if (url && !/\/audio\/transcriptions$/.test(url) && /\/v1\/?$/.test(url)) url = url.replace(/\/$/, '') + '/audio/transcriptions';
+    return { url, model: (cfg.customModel || 'whisper-1').trim(), key: cfg.customKey || '' };
+  }
+  const pre = ASR_PRESETS[cfg.provider];
+  return { url: pre.base + '/audio/transcriptions', model: cfg.model || pre.model, key: (cfg.provider === 'openai' ? cfg.openaiKey : cfg.groqKey) || '' };
+}
+
+// ส่งเสียง (Float32 16k) → Whisper API → คืน chunks [{text, timestamp:[s,e]}]
+async function transcribeViaApi(audio16k, cfg) {
+  const { url, model, key } = asrEndpoint(cfg);
+  if (!url) throw new Error('ยังไม่ได้ตั้งค่า URL ของ Subtitle engine');
+  const wav = encodeWav16(audio16k, 16000);
+  const fd = new FormData();
+  fd.append('file', wav, 'audio.wav');
+  fd.append('model', model);
+  fd.append('response_format', 'verbose_json');
+  fd.append('timestamp_granularities[]', 'word');
+  fd.append('timestamp_granularities[]', 'segment');
+  const headers = {};
+  if (key) headers['Authorization'] = 'Bearer ' + key;
+  const r = await fetch(url, { method: 'POST', headers, body: fd });
+  if (!r.ok) { const t = await r.text().catch(() => ''); throw new Error('API ' + r.status + ' — ' + t.slice(0, 200)); }
+  const data = await r.json();
+  if (data.words && data.words.length) {
+    return groupWordsIntoLines(data.words.map(w => ({ text: w.word, timestamp: [w.start, w.end] })));
+  }
+  if (data.segments && data.segments.length) {
+    return data.segments.filter(s => s.text && String(s.text).trim()).map(s => ({ text: String(s.text).trim(), timestamp: [s.start, s.end] }));
+  }
+  if (data.text && data.text.trim()) return [{ text: data.text.trim(), timestamp: [0, Math.min(audio16k.length / 16000, 5)] }];
+  return [];
+}
+
+// ── Setup modal: เลือก/เชื่อมต่อ Subtitle engine ──
+function openSubtitleSetup() {
+  document.getElementById('cfg-asrOpenaiKey').value = asrCfg.openaiKey || '';
+  document.getElementById('cfg-asrGroqKey').value = asrCfg.groqKey || '';
+  document.getElementById('cfg-asrCustomUrl').value = asrCfg.customUrl || '';
+  document.getElementById('cfg-asrCustomModel').value = asrCfg.customModel || '';
+  document.getElementById('cfg-asrCustomKey').value = asrCfg.customKey || '';
+  selectAsrProvider(asrCfg.provider || 'local');
+  document.getElementById('asrTestStat').style.display = 'none';
+  document.getElementById('subtitleSetupModal').classList.add('on');
+}
+function closeSubtitleSetup() { document.getElementById('subtitleSetupModal').classList.remove('on'); }
+function selectAsrProvider(p) {
+  asrCfg._sel = p;
+  document.querySelectorAll('#asrList .vp-card').forEach(c => c.classList.toggle('sel', c.dataset.prov === p));
+}
+function saveSubtitleSetup() {
+  asrCfg.provider = asrCfg._sel || 'local';
+  asrCfg.openaiKey = sanitizeKey(document.getElementById('cfg-asrOpenaiKey').value);
+  asrCfg.groqKey = sanitizeKey(document.getElementById('cfg-asrGroqKey').value);
+  asrCfg.customUrl = document.getElementById('cfg-asrCustomUrl').value.trim();
+  asrCfg.customModel = document.getElementById('cfg-asrCustomModel').value.trim();
+  asrCfg.customKey = sanitizeKey(document.getElementById('cfg-asrCustomKey').value);
+  try { localStorage.setItem('asrCfg', JSON.stringify(asrCfg)); } catch (e) {}
+  updateAsrBadge();
+  toast('Subtitle engine: ' + asrProviderName(asrCfg.provider) + ' ✓');
+  closeSubtitleSetup();
+}
+async function testAsrConnection() {
+  const p = asrCfg._sel || asrCfg.provider;
+  const stat = document.getElementById('asrTestStat');
+  stat.style.display = 'block'; stat.style.color = ''; stat.textContent = 'กำลังทดสอบ ' + asrProviderName(p) + '...';
+  if (p === 'local') { stat.style.color = '#4dff9a'; stat.textContent = '✓ ในเครื่องพร้อมใช้ — เลือกระดับโมเดลจาก dropdown ข้างปุ่ม Subtitle'; return; }
+  // อ่านค่าจากฟอร์มชั่วคราว (ยังไม่กดบันทึก)
+  const tmp = {
+    provider: p,
+    openaiKey: sanitizeKey(document.getElementById('cfg-asrOpenaiKey').value),
+    groqKey: sanitizeKey(document.getElementById('cfg-asrGroqKey').value),
+    customUrl: document.getElementById('cfg-asrCustomUrl').value.trim(),
+    customModel: document.getElementById('cfg-asrCustomModel').value.trim(),
+    customKey: sanitizeKey(document.getElementById('cfg-asrCustomKey').value),
+  };
+  const { url, key } = asrEndpoint(tmp);
+  if (!url) { stat.textContent = 'ใส่ URL ก่อน'; return; }
+  if (p !== 'custom' && !key) { stat.textContent = 'ใส่ API key ก่อน'; return; }
+  try {
+    // ส่งเสียงเงียบสั้น ๆ 0.3 วิ เพื่อตรวจ key/endpoint
+    const silent = new Float32Array(16000 * 0.3);
+    const chunks = await transcribeViaApi(silent, tmp);
+    stat.style.color = '#4dff9a';
+    stat.textContent = '✓ เชื่อมต่อ ' + asrProviderName(p) + ' สำเร็จ (endpoint ตอบกลับปกติ)';
+  } catch (e) {
+    stat.style.color = '#ff6b6b';
+    const msg = String((e && e.message) || e);
+    stat.textContent = '❌ ' + msg + (/Failed to fetch|CORS/i.test(msg) ? ' — อาจติด CORS ลองใช้ Groq หรือ self-host ที่เปิด CORS' : '');
+  }
+}
+
 async function generateSubtitles() {
   // เลือกคลิป: ที่เลือกอยู่ (ถ้าเป็น video) ไม่งั้นคลิปแรกใน timeline
   let clip = (selClip && mediaFiles[selClip.dataset.n] && mediaFiles[selClip.dataset.n].type.startsWith('video')) ? selClip : getVideoClipsInOrder()[0];
@@ -2034,37 +2212,44 @@ async function generateSubtitles() {
       subOut('<div class="ai-result"><strong>⚠️ ไม่พบเสียงในคลิปนี้</strong><div style="font-size:10px;color:var(--text3);margin-top:4px;">คลิปอาจไม่มี audio track</div></div>');
       return;
     }
-    const qsel = document.getElementById('subQuality');
-    const model = (qsel && qsel.value) || 'Xenova/whisper-base';
-    const short = model.split('/').pop();
-    if (!asrPipelines[model]) {
-      const t = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
-      asrPipelines[model] = await t.pipeline('automatic-speech-recognition', model, {
-        progress_callback: p => {
-          if (p && p.status === 'progress' && p.progress != null)
-            subOut('<div class="ai-thinking"><i class="ti ti-download"></i>&nbsp; โหลดโมเดล AI (' + short + ') ' + Math.round(p.progress) + '%... <span class="dots"><span>.</span><span>.</span><span>.</span></span></div>');
-        }
-      });
+    let chunks;
+    if (asrCfg.provider && asrCfg.provider !== 'local') {
+      // ── ถอดเสียงผ่าน Whisper API จริง (OpenAI / Groq / custom) — แม่นกว่าในเครื่องมาก ──
+      subOut('<div class="ai-thinking"><i class="ti ti-cloud-up"></i>&nbsp; กำลังส่งเสียงไป ' + asrProviderName(asrCfg.provider) + ' (Whisper)... <span class="dots"><span>.</span><span>.</span><span>.</span></span></div>');
+      chunks = await transcribeViaApi(audio, asrCfg);
+    } else {
+      // ── ถอดเสียงในเครื่องด้วย transformers.js (Whisper on-device) ──
+      const qsel = document.getElementById('subQuality');
+      const model = (qsel && qsel.value) || 'Xenova/whisper-base';
+      const short = model.split('/').pop();
+      if (!asrPipelines[model]) {
+        const t = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
+        asrPipelines[model] = await t.pipeline('automatic-speech-recognition', model, {
+          progress_callback: p => {
+            if (p && p.status === 'progress' && p.progress != null)
+              subOut('<div class="ai-thinking"><i class="ti ti-download"></i>&nbsp; โหลดโมเดล AI (' + short + ') ' + Math.round(p.progress) + '%... <span class="dots"><span>.</span><span>.</span><span>.</span></span></div>');
+          }
+        });
+      }
+      const asr = asrPipelines[model];
+      subOut('<div class="ai-thinking"><i class="ti ti-wave-sine"></i>&nbsp; กำลังวิเคราะห์เสียง (' + short + ')... <span class="dots"><span>.</span><span>.</span><span>.</span></span></div>');
+      // ขอ timestamp ระดับ "คำ" → จัดกลุ่มเป็นบรรทัด (fallback เป็น sentence-level ถ้าไม่รองรับ)
+      let res, wordLevel = true;
+      try {
+        res = await asr(audio, { return_timestamps: 'word', chunk_length_s: 30, stride_length_s: 5 });
+        if (!(res && res.chunks && res.chunks.length)) throw new Error('no word chunks');
+      } catch (e) {
+        wordLevel = false;
+        res = await asr(audio, { return_timestamps: true, chunk_length_s: 30, stride_length_s: 5 });
+      }
+      chunks = wordLevel
+        ? groupWordsIntoLines(res.chunks)
+        : ((res && res.chunks) ? res.chunks.filter(c => c.text && c.text.trim()) : []);
+      if (chunks.length === 0 && res && res.text && res.text.trim()) {
+        chunks = [{ timestamp: [0, Math.min(audio.length / 16000, 5)], text: res.text.trim() }];
+      }
     }
-    const asr = asrPipelines[model];
-    subOut('<div class="ai-thinking"><i class="ti ti-wave-sine"></i>&nbsp; กำลังวิเคราะห์เสียง (' + short + ')... <span class="dots"><span>.</span><span>.</span><span>.</span></span></div>');
-    // ขอ timestamp ระดับ "คำ" เพื่อให้ subtitle ตรงจังหวะที่พูด แล้วจัดกลุ่มเป็นบรรทัด
-    // (ถ้าโมเดล/เวอร์ชันไม่รองรับ word-level → fallback เป็น sentence-level แบบเดิม)
-    let res, wordLevel = true;
-    try {
-      res = await asr(audio, { return_timestamps: 'word', chunk_length_s: 30, stride_length_s: 5 });
-      if (!(res && res.chunks && res.chunks.length)) throw new Error('no word chunks');
-    } catch (e) {
-      wordLevel = false;
-      res = await asr(audio, { return_timestamps: true, chunk_length_s: 30, stride_length_s: 5 });
-    }
-    let chunks = wordLevel
-      ? groupWordsIntoLines(res.chunks)
-      : ((res && res.chunks) ? res.chunks.filter(c => c.text && c.text.trim()) : []);
-    if (chunks.length === 0 && res && res.text && res.text.trim()) {
-      chunks = [{ timestamp: [0, Math.min(audio.length / 16000, 5)], text: res.text.trim() }];
-    }
-    if (chunks.length === 0) { subOut('<div class="ai-result"><strong>⚠️ ไม่พบคำพูดในคลิป</strong></div>'); return; }
+    if (!chunks || chunks.length === 0) { subOut('<div class="ai-result"><strong>⚠️ ไม่พบคำพูดในคลิป</strong></div>'); return; }
     pushUndo();
     const count = createSubtitleClips(clip, chunks);
     redrawPreview();
@@ -2870,6 +3055,7 @@ document.addEventListener('keydown', e => {
 });
 updateUndoUI();
 updateVoiceBadge();
+updateAsrBadge();
 
 // ═══════════════════════════════════════════
 //  KEYFRAMES — per-clip animatable properties
