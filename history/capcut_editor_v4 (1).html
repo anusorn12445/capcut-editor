@@ -1,0 +1,1728 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Video Editor</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#1a1a1a;--bg2:#222222;--bg3:#2a2a2a;--bg4:#333333;--bg5:#3d3d3d;
+  --border:#3a3a3a;--border2:#444;--text1:#ffffff;--text2:#aaaaaa;--text3:#666;
+  --accent:#ff4d4d;--accent2:#ff6b6b;--accent-dim:rgba(255,77,77,0.15);
+  --blue:#4da6ff;--blue-dim:rgba(77,166,255,0.15);--green:#4dff9a;
+  --green-dim:rgba(77,255,154,0.12);--purple:#c084fc;--amber:#fbbf24;
+}
+body{background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;}
+.app{width:1100px;height:700px;background:var(--bg);border-radius:14px;overflow:hidden;display:flex;flex-direction:column;border:1px solid var(--border);}
+
+/* TOP BAR */
+.topbar{height:44px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:10px;flex-shrink:0;}
+.logo{font-size:13px;font-weight:700;color:var(--text1);letter-spacing:-0.3px;display:flex;align-items:center;gap:6px;}
+.logo-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;}
+.top-sep{width:1px;height:20px;background:var(--border2);}
+.tbtn{height:28px;padding:0 10px;border-radius:6px;border:none;background:transparent;font-size:12px;cursor:pointer;color:var(--text2);display:flex;align-items:center;gap:5px;transition:all .15s;white-space:nowrap;}
+.tbtn:hover{background:var(--bg4);color:var(--text1);}
+.tbtn i{font-size:14px;}
+.tbtn.red{color:var(--accent);}
+.tbtn.red:hover{background:var(--accent-dim);color:var(--accent2);}
+.sp{flex:1;}
+.export-btn{height:30px;padding:0 16px;border-radius:7px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s;}
+.export-btn:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(255,77,77,.4);}
+.project-name{font-size:12px;color:var(--text3);margin-right:4px;}
+
+/* MAIN */
+.main{flex:1;display:flex;overflow:hidden;}
+
+/* LEFT */
+.left{width:200px;background:var(--bg2);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0;}
+.ltabs{display:flex;border-bottom:1px solid var(--border);}
+.ltab{flex:1;padding:0;height:36px;display:flex;align-items:center;justify-content:center;font-size:10px;color:var(--text3);cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;gap:4px;flex-direction:column;}
+.ltab i{font-size:15px;}
+.ltab span{font-size:9px;}
+.ltab.on{color:var(--text1);border-bottom-color:var(--accent);}
+.ltab:hover:not(.on){color:var(--text2);}
+.media-list{flex:1;overflow-y:auto;padding:8px;}
+.media-list::-webkit-scrollbar{width:3px;}
+.media-list::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.import-btn{width:100%;height:60px;border-radius:8px;border:1.5px dashed var(--border2);background:transparent;color:var(--text3);font-size:11px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;margin-bottom:8px;transition:all .15s;}
+.import-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
+.import-btn i{font-size:18px;}
+.mitem{display:flex;align-items:center;gap:7px;padding:6px 7px;border-radius:7px;cursor:grab;transition:all .12s;border:1px solid transparent;}
+.mitem:hover{background:var(--bg4);border-color:var(--border2);}
+.mitem:active{cursor:grabbing;}
+.mthumb{width:40px;height:28px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;overflow:hidden;background:#111;}
+.mthumb video,.mthumb img{width:100%;height:100%;object-fit:cover;border-radius:5px;}
+.mthumb.tv{background:linear-gradient(135deg,#1a3a6a,#2563ab);}
+.mthumb.ta{background:linear-gradient(135deg,#0d3d22,#16a34a);}
+.mthumb.ti{background:linear-gradient(135deg,#3d2800,#b45309);}
+.mthumb i{font-size:13px;}
+.minfo{flex:1;min-width:0;}
+.mname{font-size:11px;color:var(--text1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500;}
+.mdur{font-size:10px;color:var(--text3);margin-top:1px;}
+
+/* CENTER */
+.center{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+
+/* Preview */
+.preview{flex:1;background:#111;display:flex;align-items:center;justify-content:center;position:relative;min-height:0;}
+.screen{width:280px;height:158px;background:#0a0a0a;border-radius:4px;position:relative;overflow:hidden;flex-shrink:0;}
+#previewVideo{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:none;background:#000;}
+.screen-ph{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--text3);pointer-events:none;}
+.screen-ph i{font-size:36px;}
+.screen-ph p{font-size:11px;}
+.scr-tc{position:absolute;bottom:6px;left:8px;font-size:10px;font-family:monospace;color:rgba(255,255,255,.55);pointer-events:none;}
+.scr-label{position:absolute;bottom:6px;right:8px;font-size:9px;color:rgba(255,255,255,.3);pointer-events:none;display:none;}
+.no-video-canvas{position:absolute;inset:0;display:none;}
+
+/* Player controls */
+.pctrl{height:48px;background:var(--bg2);border-top:1px solid var(--border);display:flex;align-items:center;padding:0 16px;gap:8px;flex-shrink:0;}
+.pico-btn{width:26px;height:26px;border-radius:50%;border:none;background:transparent;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;}
+.pico-btn:hover{color:var(--text1);}
+.pico-btn i{font-size:15px;}
+.play-btn{width:38px;height:38px;border-radius:50%;border:none;background:var(--text1);color:#111;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;box-shadow:0 2px 8px rgba(0,0,0,.4);}
+.play-btn:hover{transform:scale(1.05);}
+.play-btn i{font-size:17px;margin-left:1px;}
+.tc-txt{font-size:12px;font-family:monospace;color:var(--text2);margin-left:4px;}
+.vol-row{display:flex;align-items:center;gap:6px;margin-left:auto;}
+.vol-row i{font-size:14px;color:var(--text3);}
+.vol-row input{width:64px;}
+
+/* AI bar */
+.ai-strip{background:var(--bg2);border-top:1px solid var(--border);padding:8px 12px;flex-shrink:0;}
+.ai-row{display:flex;gap:6px;}
+.ai-inp{flex:1;height:32px;padding:0 11px;border-radius:8px;border:1px solid var(--border2);background:var(--bg3);color:var(--text1);font-size:12px;outline:none;transition:border .15s;}
+.ai-inp:focus{border-color:var(--accent);}
+.ai-inp::placeholder{color:var(--text3);}
+.ai-send{height:32px;padding:0 12px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:600;cursor:pointer;}
+.ai-send:hover{background:var(--accent2);}
+.ai-chips{display:flex;gap:5px;margin-top:6px;flex-wrap:wrap;}
+.achip{padding:3px 9px;border-radius:999px;border:1px solid var(--border2);font-size:10px;color:var(--text3);cursor:pointer;background:transparent;transition:all .15s;white-space:nowrap;}
+.achip:hover{color:var(--text1);border-color:var(--accent);background:var(--accent-dim);}
+.ai-out{margin-top:7px;padding:9px 11px;border-radius:8px;background:var(--bg3);border:1px solid var(--border2);font-size:11px;display:none;}
+.ai-out.on{display:block;}
+.ai-thinking{display:flex;align-items:center;gap:7px;color:var(--blue);}
+.dots span{display:inline-block;animation:blink 1.2s infinite;}
+.dots span:nth-child(2){animation-delay:.2s;}
+.dots span:nth-child(3){animation-delay:.4s;}
+@keyframes blink{0%,80%,100%{opacity:0}40%{opacity:1}}
+.ai-result strong{color:var(--accent2);display:block;margin-bottom:5px;}
+.ai-result ul{padding-left:14px;}
+.ai-result li{color:var(--text2);line-height:1.7;}
+.apply-btn{margin-top:6px;padding:4px 12px;border-radius:6px;border:1px solid var(--accent);background:transparent;color:var(--accent2);font-size:11px;cursor:pointer;}
+.apply-btn:hover{background:var(--accent-dim);}
+
+/* RIGHT PANEL */
+.right{width:188px;background:var(--bg2);border-left:1px solid var(--border);overflow-y:auto;flex-shrink:0;}
+.right::-webkit-scrollbar{width:3px;}
+.right::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.psec{padding:10px 12px;border-bottom:1px solid var(--border);}
+.psec-title{font-size:10px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;}
+.prow{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+.pk{font-size:11px;color:var(--text3);}
+.pv{font-size:11px;color:var(--text2);font-weight:500;}
+.pin{width:70px;height:24px;padding:0 6px;font-size:11px;border-radius:5px;border:1px solid var(--border2);background:var(--bg3);color:var(--text1);outline:none;}
+.pin:focus{border-color:var(--accent);}
+.psel{width:100%;height:26px;padding:0 7px;font-size:11px;border-radius:5px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);margin-bottom:5px;outline:none;}
+.papply{width:100%;height:26px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:11px;cursor:pointer;transition:all .15s;}
+.papply:hover{background:var(--bg4);color:var(--text1);border-color:var(--accent);}
+.slider-row{display:flex;flex-direction:column;gap:3px;margin-bottom:7px;}
+.slider-lbl{display:flex;justify-content:space-between;}
+.slider-lbl span:first-child{font-size:10px;color:var(--text3);}
+.slider-lbl span:last-child{font-size:10px;color:var(--text2);font-weight:500;}
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:3px;border-radius:2px;background:var(--border2);outline:none;cursor:pointer;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--text1);cursor:pointer;border:2px solid var(--bg2);}
+select,input[type=text],input[type=number]{color-scheme:dark;}
+
+/* TIMELINE */
+.tl-wrap{background:var(--bg2);border-top:1px solid var(--border);flex-shrink:0;}
+.tl-toolbar{height:34px;background:var(--bg);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 10px;gap:4px;}
+.tl-tbtn{height:26px;padding:0 8px;border-radius:5px;border:none;background:transparent;color:var(--text3);font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;transition:all .12s;}
+.tl-tbtn:hover{background:var(--bg3);color:var(--text1);}
+.tl-tbtn i{font-size:13px;}
+.tl-sep{width:1px;height:16px;background:var(--border2);}
+.tl-zoom-row{display:flex;align-items:center;gap:5px;margin-left:auto;}
+.tl-zoom-row i{font-size:12px;color:var(--text3);}
+.tl-zoom-row input{width:60px;}
+
+/* Duration control */
+.dur-ctrl{display:flex;align-items:center;gap:0;background:var(--bg3);border:1px solid var(--border2);border-radius:7px;overflow:hidden;height:26px;}
+.dur-btn{width:24px;height:26px;border:none;background:transparent;color:var(--text2);font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:background .12s;flex-shrink:0;}
+.dur-btn:hover{background:var(--bg5);color:var(--text1);}
+.dur-display{padding:0 7px;font-size:11px;color:var(--text1);font-weight:600;font-family:monospace;cursor:pointer;display:flex;align-items:center;gap:4px;min-width:52px;justify-content:center;border-left:1px solid var(--border2);border-right:1px solid var(--border2);height:100%;}
+.dur-display:hover{background:var(--bg4);}
+.dur-input{display:none;height:26px;padding:0 7px;border-radius:7px;border:1px solid var(--accent);background:var(--bg3);color:var(--text1);font-size:11px;font-family:monospace;width:64px;outline:none;}
+.dur-input.on{display:block;}
+.tracks{padding:4px 10px 8px 10px;display:flex;flex-direction:column;gap:3px;overflow-x:auto;}
+.tracks::-webkit-scrollbar{height:4px;}
+.tracks::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+.track{display:flex;align-items:center;gap:6px;height:30px;}
+.track.header-track{height:20px;}
+.tlbl{width:44px;flex-shrink:0;font-size:10px;color:var(--text3);text-align:right;display:flex;align-items:center;justify-content:flex-end;gap:3px;}
+.lane{flex:1;height:100%;background:rgba(255,255,255,0.03);border-radius:4px;position:relative;overflow:visible;border:1px solid var(--border);cursor:default;}
+.lane.drop-target{border-color:var(--accent);background:var(--accent-dim);}
+.tscale{flex:1;height:20px;position:relative;background:transparent;border-radius:3px;overflow:visible;}
+#ph0{position:absolute;top:0;width:2px;background:var(--accent);pointer-events:none;z-index:20;
+  /* ยืดลงมาครอบ track ทั้งหมด (~4 tracks × 34px) */
+  bottom:calc(-4 * 34px - 16px);
+}
+.tick{position:absolute;top:6px;bottom:0;width:.5px;background:var(--border2);}
+.tlabel{position:absolute;top:2px;font-size:9px;color:var(--text3);transform:translateX(-50%);font-family:monospace;}
+.ph-line{position:absolute;top:-4px;width:2px;background:var(--accent);pointer-events:none;z-index:20;bottom:-4px;}
+.ph-head{position:absolute;top:-6px;left:-6px;width:14px;height:14px;background:var(--accent);border-radius:50%;cursor:ew-resize;pointer-events:all;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5);transition:transform .1s;}
+.ph-head:hover{transform:scale(1.25);}
+/* เส้นแดงทุกเส้นใน lane ลากได้ */
+.lane .ph-line{pointer-events:all;cursor:ew-resize;width:6px;left:-2px;background:var(--accent);opacity:.85;}
+.lane .ph-line:hover{opacity:1;width:8px;left:-3px;}
+.lane .ph-line::before{content:'';position:absolute;top:0;bottom:0;left:-6px;right:-6px;} /* ขยาย hit area */
+.clip{position:absolute;top:2px;height:calc(100% - 4px);border-radius:4px;display:flex;align-items:center;padding:0 7px;font-size:10px;font-weight:600;overflow:hidden;white-space:nowrap;cursor:grab;user-select:none;transition:box-shadow .1s,filter .1s;}
+.clip:active{cursor:grabbing;}
+.clip.sel{box-shadow:0 0 0 2px var(--text1);}
+.clip:hover:not(.sel){filter:brightness(1.2);}
+.clip.dragging{opacity:.75;z-index:50;}
+.cv{background:linear-gradient(180deg,#1e5799 0%,#1a4a7a 100%);color:#b3d4ff;border:1px solid #2563ab;}
+.ca{background:linear-gradient(180deg,#1a6e40 0%,#145c3a 100%);color:#86efac;border:1px solid #16a34a;}
+.ct{background:linear-gradient(180deg,#7c4e00 0%,#5c3a00 100%);color:#fcd34d;border:1px solid #b45309;}
+.cfx{background:linear-gradient(180deg,#4c1d95 0%,#3b1a5a 100%);color:#d8b4fe;border:1px solid #7c3aed;}
+.clip-rh{position:absolute;top:0;bottom:0;width:5px;cursor:ew-resize;z-index:5;}
+.clip-rh.left{left:0;}
+.clip-rh.right{right:0;}
+
+/* Context Menu */
+.ctx{position:fixed;background:var(--bg3);border:1px solid var(--border2);border-radius:10px;padding:5px;min-width:190px;z-index:9999;box-shadow:0 10px 32px rgba(0,0,0,.7);display:none;}
+.ctx.on{display:block;}
+.ctx-item{display:flex;align-items:center;gap:9px;padding:7px 10px;border-radius:6px;font-size:12px;color:var(--text2);cursor:pointer;transition:background .1s;}
+.ctx-item:hover{background:var(--bg5);color:var(--text1);}
+.ctx-item i{font-size:14px;width:16px;text-align:center;flex-shrink:0;}
+.ctx-item.accent{color:var(--accent2);}
+.ctx-item.accent:hover{background:var(--accent-dim);}
+.ctx-item.blue{color:var(--blue);}
+.ctx-item.blue:hover{background:var(--blue-dim);}
+.ctx-item.danger{color:#ff6b6b;}
+.ctx-item.danger:hover{background:rgba(255,77,77,.12);}
+.ctx-sep{height:1px;background:var(--border);margin:4px 4px;}
+.ctx-header{padding:5px 10px 3px;font-size:10px;color:var(--text3);font-weight:600;text-transform:uppercase;letter-spacing:.05em;}
+
+/* Export Modal */
+.modal-bg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000;align-items:center;justify-content:center;backdrop-filter:blur(3px);}
+.modal-bg.on{display:flex;}
+.modal{background:var(--bg2);border-radius:14px;border:1px solid var(--border2);padding:24px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,.8);}
+.modal-title{font-size:15px;font-weight:700;color:var(--text1);margin-bottom:16px;display:flex;align-items:center;gap:9px;}
+.modal-title i{color:var(--accent);font-size:18px;}
+.mrow{margin-bottom:10px;}
+.mrow label{font-size:11px;color:var(--text3);display:block;margin-bottom:4px;}
+.mrow select,.mrow input[type=text]{width:100%;height:32px;padding:0 9px;border-radius:7px;border:1px solid var(--border2);background:var(--bg3);color:var(--text2);font-size:12px;outline:none;}
+.prog-wrap{background:var(--bg);border-radius:4px;height:5px;margin-top:10px;overflow:hidden;display:none;}
+.prog-bar{height:100%;background:var(--accent);border-radius:4px;transition:width .25s;}
+.prog-wrap.on{display:block;}
+.exp-stat{font-size:11px;color:var(--text3);margin-top:6px;display:none;}
+.mactions{display:flex;gap:8px;justify-content:flex-end;margin-top:16px;}
+.mbtn{height:32px;padding:0 14px;border-radius:7px;border:1px solid var(--border2);background:transparent;color:var(--text2);font-size:12px;cursor:pointer;transition:all .15s;}
+.mbtn:hover{background:var(--bg4);color:var(--text1);}
+.mbtn.red{background:var(--accent);color:#fff;border-color:var(--accent);}
+.mbtn.red:hover{background:var(--accent2);}
+.exp-note{font-size:10px;color:var(--text3);margin-top:8px;line-height:1.6;padding:8px;background:var(--bg3);border-radius:6px;border:1px solid var(--border);}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--bg4);color:var(--text1);padding:8px 18px;border-radius:999px;font-size:12px;z-index:9998;opacity:0;transition:opacity .2s;pointer-events:none;border:1px solid var(--border2);box-shadow:0 4px 16px rgba(0,0,0,.5);white-space:nowrap;}
+::-webkit-scrollbar{width:4px;height:4px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+
+/* ── AI CUT BUTTON ── */
+.ai-cut-fab{
+  position:fixed;
+  right:28px;
+  bottom:88px;
+  width:62px;height:62px;
+  border-radius:50%;
+  border:none;
+  background:conic-gradient(from 0deg,#ff4d4d,#ff9f43,#ff4d4d);
+  color:#fff;
+  font-size:10px;font-weight:700;
+  cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  z-index:900;
+  box-shadow:0 4px 20px rgba(255,77,77,.55);
+  transition:transform .2s,box-shadow .2s;
+  animation:fabPulse 2.8s ease-in-out infinite;
+}
+.ai-cut-fab:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(255,77,77,.75);}
+.ai-cut-fab:active{transform:scale(.95);}
+.ai-cut-fab i{font-size:20px;margin-bottom:1px;}
+.ai-cut-fab span{font-size:8.5px;letter-spacing:.03em;opacity:.9;}
+@keyframes fabPulse{
+  0%,100%{box-shadow:0 4px 20px rgba(255,77,77,.55);}
+  50%{box-shadow:0 4px 28px rgba(255,77,77,.9),0 0 0 8px rgba(255,77,77,.12);}
+}
+
+/* spinning ring when active */
+.ai-cut-fab.running{
+  animation:fabSpin 1s linear infinite;
+  background:conic-gradient(from 0deg,#4da6ff,#c084fc,#ff4d4d,#4da6ff);
+}
+@keyframes fabSpin{from{filter:hue-rotate(0deg);}to{filter:hue-rotate(360deg);}}
+
+/* transition clip on timeline */
+.clip.cfx-trans{
+  background:linear-gradient(180deg,#6d28d9,#4c1d95);
+  color:#e9d5ff;border:1px solid #7c3aed;
+  display:flex;align-items:center;justify-content:center;
+  font-size:8px;font-weight:700;letter-spacing:.04em;
+}
+
+/* AI cut result bubble */
+.ai-cut-result{
+  position:fixed;right:100px;bottom:100px;
+  background:var(--bg3);border:1px solid var(--accent);
+  border-radius:12px;padding:12px 14px;
+  font-size:11px;color:var(--text2);
+  max-width:220px;z-index:901;
+  box-shadow:0 8px 28px rgba(0,0,0,.6);
+  display:none;
+}
+.ai-cut-result.on{display:block;animation:popIn .25s ease;}
+@keyframes popIn{from{opacity:0;transform:scale(.85) translateY(8px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.ai-cut-result h4{color:var(--accent2);font-size:12px;margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.ai-cut-result ul{padding-left:14px;}
+.ai-cut-result li{line-height:1.8;color:var(--text2);}
+.ai-cut-result .close-bubble{position:absolute;top:7px;right:9px;background:none;border:none;color:var(--text3);cursor:pointer;font-size:14px;}
+
+</style>
+</head>
+<body>
+<div class="app">
+  <!-- TOP BAR -->
+  <div class="topbar">
+    <div class="logo"><div class="logo-dot"></div>VideoEditor</div>
+    <div class="top-sep"></div>
+    <button class="tbtn" onclick="undo()"><i class="ti ti-arrow-back-up"></i> Undo</button>
+    <button class="tbtn" onclick="splitClip()"><i class="ti ti-scissors"></i> Split</button>
+    <button class="tbtn red" onclick="deleteClip()"><i class="ti ti-trash"></i></button>
+    <div class="sp"></div>
+    <span class="project-name">my_project</span>
+    <button class="export-btn" onclick="openExport()"><i class="ti ti-rocket" style="font-size:14px;"></i> Export</button>
+  </div>
+
+  <div class="main">
+    <!-- LEFT PANEL -->
+    <div class="left">
+      <div class="ltabs">
+        <div class="ltab on" onclick="ltab(this,'media')"><i class="ti ti-layout-grid"></i><span>Media</span></div>
+        <div class="ltab" onclick="ltab(this,'audio')"><i class="ti ti-music"></i><span>Audio</span></div>
+        <div class="ltab" onclick="ltab(this,'text')"><i class="ti ti-text-size"></i><span>Text</span></div>
+        <div class="ltab" onclick="ltab(this,'fx')"><i class="ti ti-wand"></i><span>FX</span></div>
+      </div>
+      <div class="media-list" id="mediaList">
+        <button class="import-btn" onclick="importMedia()">
+          <i class="ti ti-cloud-upload"></i>Import media
+        </button>
+      </div>
+    </div>
+
+    <!-- CENTER -->
+    <div class="center">
+      <!-- Preview -->
+      <div class="preview">
+        <div class="screen" id="screen">
+          <div class="screen-ph" id="screenPh">
+            <i class="ti ti-player-play"></i>
+            <p>Import และลาก Video มาที่ Timeline</p>
+          </div>
+          <!-- video element จริง -->
+          <video id="previewVideo" playsinline></video>
+          <canvas class="no-video-canvas" id="noVidCanvas" width="280" height="158"></canvas>
+          <div class="scr-tc" id="scrTc">00:00</div>
+          <div class="scr-label" id="scrLabel">PREVIEW</div>
+        </div>
+      </div>
+
+      <!-- Player controls -->
+      <div class="pctrl">
+        <button class="pico-btn" onclick="seekRel(-5)" title="Back 5s"><i class="ti ti-player-skip-back"></i></button>
+        <button class="play-btn" id="playBtn" onclick="togglePlay()" aria-label="Play/Pause">
+          <i class="ti ti-player-play" id="playIco"></i>
+        </button>
+        <button class="pico-btn" onclick="seekRel(5)" title="Forward 5s"><i class="ti ti-player-skip-forward"></i></button>
+        <span class="tc-txt" id="tcTxt">00:00 / 00:00</span>
+        <div class="vol-row">
+          <i class="ti ti-volume"></i>
+          <input type="range" min="0" max="100" value="80" id="volSlider" oninput="setVolume(this.value)" style="width:60px;">
+        </div>
+      </div>
+
+      <!-- AI strip -->
+      <div class="ai-strip">
+        <div class="ai-row">
+          <input class="ai-inp" id="aiIn" placeholder="บอก AI เช่น 'ตัดฉากเงียบ', 'color grade cinematic'..." onkeydown="if(event.key==='Enter')sendAI()">
+          <button class="ai-send" onclick="sendAI()">✦ AI</button>
+        </div>
+        <div class="ai-chips">
+          <span class="achip" onclick="qai('ตัดต่ออัตโนมัติ')">✂ Auto Cut</span>
+          <span class="achip" onclick="qai('color grade')">Color Grade</span>
+          <span class="achip" onclick="qai('beat sync')">Beat Sync</span>
+          <span class="achip" onclick="qai('noise')">Noise Remove</span>
+          <span class="achip" onclick="qai('subtitle')">Subtitle</span>
+          <span class="achip" onclick="qai('transition')">Transitions</span>
+        </div>
+        <div class="ai-out" id="aiOut"></div>
+      </div>
+    </div>
+
+    <!-- RIGHT PANEL -->
+    <div class="right">
+      <div class="psec">
+        <div class="psec-title">Clip</div>
+        <div class="prow"><span class="pk">ชื่อ</span><span class="pv" id="pname">—</span></div>
+        <div class="prow"><span class="pk">Start</span><input class="pin" id="pst" value="0:00"></div>
+        <div class="prow"><span class="pk">End</span><input class="pin" id="pen" value="—"></div>
+        <div class="prow"><span class="pk">Speed</span><input class="pin" value="1.0×"></div>
+      </div>
+      <div class="psec">
+        <div class="psec-title">Transform</div>
+        <div class="slider-row">
+          <div class="slider-lbl"><span>Scale</span><span id="sv-scale">100%</span></div>
+          <input type="range" min="10" max="200" value="100" oninput="document.getElementById('sv-scale').textContent=this.value+'%'">
+        </div>
+        <div class="slider-row">
+          <div class="slider-lbl"><span>Opacity</span><span id="sv-opacity">100%</span></div>
+          <input type="range" min="0" max="100" value="100" oninput="document.getElementById('sv-opacity').textContent=this.value+'%';applyOpacity(this.value)">
+        </div>
+        <div class="slider-row">
+          <div class="slider-lbl"><span>Rotate</span><span id="sv-rot">0°</span></div>
+          <input type="range" min="-180" max="180" value="0" oninput="document.getElementById('sv-rot').textContent=this.value+'°'">
+        </div>
+      </div>
+      <div class="psec">
+        <div class="psec-title">Color</div>
+        <div class="slider-row">
+          <div class="slider-lbl"><span>Brightness</span><span id="sv-br">0</span></div>
+          <input type="range" min="-100" max="100" value="0" oninput="document.getElementById('sv-br').textContent=this.value;applyFilters()">
+        </div>
+        <div class="slider-row">
+          <div class="slider-lbl"><span>Contrast</span><span id="sv-con">0</span></div>
+          <input type="range" min="-100" max="100" value="0" oninput="document.getElementById('sv-con').textContent=this.value;applyFilters()">
+        </div>
+        <div class="slider-row">
+          <div class="slider-lbl"><span>Saturation</span><span id="sv-sat">0</span></div>
+          <input type="range" min="-100" max="100" value="0" oninput="document.getElementById('sv-sat').textContent=this.value;applyFilters()">
+        </div>
+        <select class="psel" onchange="applyPreset(this.value)">
+          <option value="">— Color preset —</option>
+          <option value="cinematic">Cinematic</option>
+          <option value="warm">Warm Tone</option>
+          <option value="cool">Cool Tone</option>
+          <option value="bw">Black & White</option>
+          <option value="vintage">Vintage</option>
+        </select>
+      </div>
+      <div class="psec">
+        <div class="psec-title">Audio</div>
+        <div class="slider-row">
+          <div class="slider-lbl"><span>Volume</span><span id="sv-vol">100%</span></div>
+          <input type="range" min="0" max="200" value="100" oninput="document.getElementById('sv-vol').textContent=this.value+'%';setVideoVolume(this.value)">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TIMELINE -->
+  <div class="tl-wrap">
+    <div class="tl-toolbar">
+      <button class="tl-tbtn" onclick="importMedia()"><i class="ti ti-plus"></i> Add</button>
+      <div class="tl-sep"></div>
+      <button class="tl-tbtn" onclick="splitClip()"><i class="ti ti-scissors"></i> Split</button>
+      <button class="tl-tbtn" onclick="deleteClip()"><i class="ti ti-trash"></i> Delete</button>
+      <button class="tl-tbtn" onclick="undo()"><i class="ti ti-arrow-back-up"></i> Undo</button>
+      <div class="tl-sep"></div>
+      <button class="tl-tbtn" onclick="toast('Snap เปิด ✓')"><i class="ti ti-magnet"></i> Snap</button>
+      <div class="tl-sep"></div>
+      <!-- Duration control — ตามรูป UI -->
+      <div class="dur-ctrl">
+        <button class="dur-btn" onclick="changeDuration(-30)" title="-30s">−</button>
+        <div class="dur-display" id="durDisplay" onclick="openDurInput()" title="คลิกเพื่อแก้ไข">
+          <i class="ti ti-clock" style="font-size:10px;opacity:.6;"></i>
+          <span id="durLabel">1:00</span>
+        </div>
+        <button class="dur-btn" onclick="changeDuration(+30)" title="+30s">+</button>
+      </div>
+      <!-- inline input (hidden) -->
+      <input id="durInput" class="dur-input" type="text" placeholder="m:ss"
+             onblur="applyDurInput()" onkeydown="if(event.key==='Enter')applyDurInput();if(event.key==='Escape')hideDurInput();">
+      <div class="tl-zoom-row">
+        <i class="ti ti-zoom-out" style="cursor:pointer;" onclick="changeZoom(-0.5)"></i>
+        <input type="range" id="zoomSlider" min="1" max="8" value="2" step="0.5" style="width:60px;" oninput="applyZoom(this.value)">
+        <i class="ti ti-zoom-in" style="cursor:pointer;" onclick="changeZoom(+0.5)"></i>
+      </div>
+    </div>
+    <div class="tracks" id="tracks">
+      <div class="track header-track">
+        <div class="tlbl"></div>
+        <div class="tscale" id="tscale">
+          <div class="ph-line" id="ph0" style="pointer-events:all;cursor:ew-resize;"><div class="ph-head" id="phHead"></div></div>
+        </div>
+      </div>
+      <div class="track">
+        <div class="tlbl"><i class="ti ti-video" style="color:#4da6ff;font-size:11px;"></i> V1</div>
+        <div class="lane" id="lv1" ondrop="dropLane(event,'lv1','v')" ondragover="event.preventDefault();this.classList.add('drop-target')" ondragleave="this.classList.remove('drop-target')">
+          <div class="ph-line" id="ph1" style="pointer-events:none;"></div>
+        </div>
+      </div>
+      <div class="track">
+        <div class="tlbl"><i class="ti ti-video" style="color:#4da6ff;font-size:11px;"></i> V2</div>
+        <div class="lane" id="lv2" ondrop="dropLane(event,'lv2','v')" ondragover="event.preventDefault();this.classList.add('drop-target')" ondragleave="this.classList.remove('drop-target')">
+          <div class="ph-line" id="ph2" style="pointer-events:none;"></div>
+        </div>
+      </div>
+      <div class="track">
+        <div class="tlbl"><i class="ti ti-music" style="color:#4dff9a;font-size:11px;"></i> A1</div>
+        <div class="lane" id="la1" ondrop="dropLane(event,'la1','a')" ondragover="event.preventDefault();this.classList.add('drop-target')" ondragleave="this.classList.remove('drop-target')">
+          <div class="ph-line" id="ph3" style="pointer-events:none;"></div>
+        </div>
+      </div>
+      <div class="track">
+        <div class="tlbl"><i class="ti ti-text-size" style="color:#fbbf24;font-size:11px;"></i> T1</div>
+        <div class="lane" id="lt1" ondrop="dropLane(event,'lt1','t')" ondragover="event.preventDefault();this.classList.add('drop-target')" ondragleave="this.classList.remove('drop-target')">
+          <div class="ph-line" id="ph4" style="pointer-events:none;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Context Menu -->
+<div class="ctx" id="ctx">
+  <div class="ctx-header" id="ctxClipName">clip</div>
+  <div class="ctx-item blue" onclick="ctxAIEnhance()"><i class="ti ti-robot"></i> AI Enhance</div>
+  <div class="ctx-item blue" onclick="ctxAICut()"><i class="ti ti-cut"></i> AI Auto Cut</div>
+  <div class="ctx-item blue" onclick="ctxAISubtitle()"><i class="ti ti-closed-caption"></i> AI Subtitle</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item accent" onclick="ctxColorGrade()"><i class="ti ti-palette"></i> Color Grade</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item" onclick="ctxSplit()"><i class="ti ti-scissors"></i> Split</div>
+  <div class="ctx-item" onclick="ctxDuplicate()"><i class="ti ti-copy"></i> Duplicate</div>
+  <div class="ctx-sep"></div>
+  <div class="ctx-item danger" onclick="ctxDelete()"><i class="ti ti-trash"></i> Delete</div>
+</div>
+
+<!-- Export Modal -->
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <div class="modal-title"><i class="ti ti-rocket"></i> Export Video</div>
+    <div class="mrow"><label>Format</label>
+      <select id="expFormat">
+        <option value="webm">WebM (VP9) — รองรับ browser ทุกตัว</option>
+        <option value="mp4">MP4 (H.264) — ต้องการ codec support</option>
+      </select>
+    </div>
+    <div class="mrow"><label>Quality</label>
+      <select id="expQuality">
+        <option value="8000000">High (8 Mbps)</option>
+        <option value="4000000" selected>Medium (4 Mbps)</option>
+        <option value="1000000">Low (1 Mbps)</option>
+      </select>
+    </div>
+    <div class="mrow"><label>ชื่อไฟล์</label>
+      <input type="text" id="fname" value="my_project_export">
+    </div>
+    <div class="exp-note" id="expNote">
+      📌 Export จะรวม video clip ที่อยู่บน Timeline V1 และดาวน์โหลดไฟล์จริงลงเครื่องคุณ
+    </div>
+    <div class="prog-wrap" id="prog"><div class="prog-bar" id="pbar" style="width:0%"></div></div>
+    <div class="exp-stat" id="estat"></div>
+    <div class="mactions">
+      <button class="mbtn" id="cancelBtn" onclick="closeModal()">Cancel</button>
+      <button class="mbtn red" id="exportRunBtn" onclick="startExport()">
+        <i class="ti ti-rocket" style="font-size:12px;margin-right:4px;"></i>Export
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- AI CUT Floating Button -->
+<button class="ai-cut-fab" id="aiCutFab" onclick="runAICut()" title="AI Auto Cut + Transition Overlay">
+  <i class="ti ti-scissors"></i>
+  <span>AI CUT</span>
+</button>
+
+<!-- AI Cut Result Bubble -->
+<div class="ai-cut-result" id="aiCutResult">
+  <button class="close-bubble" onclick="document.getElementById('aiCutResult').classList.remove('on')">✕</button>
+  <h4><i class="ti ti-check" style="color:#4dff9a;font-size:13px;"></i> AI Cut เสร็จแล้ว!</h4>
+  <ul id="aiCutLog"></ul>
+</div>
+
+<script>
+// ═══════════════════════════════════════════
+//  STATE
+// ═══════════════════════════════════════════
+const mediaFiles = {};      // name -> File object
+const fileDurations = {};   // name -> duration (seconds)
+const timelineClips = [];   // { el, name, type }
+let selClip = null, ctxClip = null;
+let dragData = {};
+let currentVideoFile = null;
+let activeClipEl = null;    // clip element ที่กำลัง preview อยู่
+let mediaRecorder = null;
+let recordedChunks = [];
+let isExporting = false;
+
+const vid = document.getElementById('previewVideo');
+const screenPh = document.getElementById('screenPh');
+const scrTc = document.getElementById('scrTc');
+const scrLabel = document.getElementById('scrLabel');
+
+// ═══════════════════════════════════════════
+//  VIDEO PREVIEW — จริง
+// ═══════════════════════════════════════════
+function loadVideoPreview(file) {
+  if (!file || !file.type.startsWith('video')) return;
+  // หา clip element บน V1 ที่ตรงกับไฟล์นี้ (ซ้ายสุด)
+  const lv1 = document.getElementById('lv1');
+  const matching = Array.from(lv1.querySelectorAll('.clip'))
+    .filter(c => c.dataset.n && mediaFiles[c.dataset.n] === file)
+    .sort((a, b) => parseFloat(a.style.left) - parseFloat(b.style.left));
+  const clipEl = matching.length > 0 ? matching[0] : null;
+  loadVideoPreviewAt(file, 0, clipEl);
+  toast('โหลด ' + file.name + ' ✓');
+}
+
+// โหลด video clip ที่อยู่ซ้ายสุดบน V1 (เล่นก่อน)
+function loadEarliestVideoClip() {
+  const lv1 = document.getElementById('lv1');
+  const v1Clips = Array.from(lv1.querySelectorAll('.clip'))
+    .filter(c => {
+      const name = c.dataset.n;
+      return name && mediaFiles[name] && mediaFiles[name].type.startsWith('video');
+    })
+    .sort((a, b) => parseFloat(a.style.left) - parseFloat(b.style.left));
+  if (v1Clips.length > 0) {
+    const earliest = v1Clips[0];
+    loadVideoPreviewAt(mediaFiles[earliest.dataset.n], 0, earliest);
+  }
+}
+
+function updateTC(cur, total) {
+  document.getElementById('tcTxt').textContent = fmtTime(cur) + ' / ' + fmtTime(total);
+}
+
+// ═══════════════════════════════════════════
+//  SYNC VIDEO BY PLAYHEAD POSITION
+//  เลือก video clip ที่อยู่ ณ ตำแหน่ง playhead
+// ═══════════════════════════════════════════
+function syncVideoByPlayhead() {
+  const pct = parseFloat(document.getElementById('ph1').style.left) || 0;
+  const currentTimeSec = (pct / 100) * timelineDuration;
+
+  // หา clips บน V1 ที่ครอบคลุม currentTimeSec เรียงจากซ้ายสุด
+  const lv1 = document.getElementById('lv1');
+  const v1Clips = Array.from(lv1.querySelectorAll('.clip'))
+    .sort((a, b) => parseFloat(a.style.left) - parseFloat(b.style.left));
+
+  let targetClip = null;
+  for (const clip of v1Clips) {
+    const cLeft  = parseFloat(clip.style.left)  || 0;
+    const cWidth = parseFloat(clip.style.width) || 0;
+    const cStart = (cLeft / 100) * timelineDuration;
+    const cEnd   = ((cLeft + cWidth) / 100) * timelineDuration;
+    if (currentTimeSec >= cStart && currentTimeSec <= cEnd) {
+      targetClip = clip; break;
+    }
+  }
+
+  // ถ้าไม่มี clip ที่ตรงกัน ใช้ clip แรกสุด (ซ้ายสุด)
+  if (!targetClip && v1Clips.length > 0) targetClip = v1Clips[0];
+  if (!targetClip) return;
+
+  const name = targetClip.dataset.n;
+  if (!name || !mediaFiles[name]) return;
+  const file = mediaFiles[name];
+  if (!file.type.startsWith('video')) return;
+
+  // คำนวณ offset ภายใน clip (วินาที นับจาก trimStart)
+  const cLeft = parseFloat(targetClip.style.left) || 0;
+  const clipTimelineStart = (cLeft / 100) * timelineDuration;
+  const trimStart = parseFloat(targetClip.dataset.trimStart) || 0;
+  const offsetInClip = Math.max(0, currentTimeSec - clipTimelineStart);
+
+  // โหลดเฉพาะถ้าเป็น clip คนละตัว
+  if (activeClipEl !== targetClip) {
+    loadVideoPreviewAt(file, offsetInClip, targetClip);
+  } else if (vid.duration) {
+    // clip เดิม แค่ seek
+    const seekTo = Math.min(trimStart + offsetInClip, vid.duration);
+    vid.currentTime = seekTo;
+  }
+}
+
+// โหลด video แล้ว seek ไปที่ offset
+function loadVideoPreviewAt(file, offsetSec, clipEl, autoPlay) {
+  if (!file || !file.type.startsWith('video')) return;
+  currentVideoFile = file;
+  if (clipEl) activeClipEl = clipEl;
+
+  const url = URL.createObjectURL(file);
+  vid.src = url;
+  vid.style.display = 'block';
+  screenPh.style.display = 'none';
+  scrTc.style.display = 'block';
+  scrLabel.style.display = 'block';
+  scrLabel.textContent = 'PREVIEW';
+
+  vid.onloadedmetadata = () => {
+    const trimStart = activeClipEl ? (parseFloat(activeClipEl.dataset.trimStart) || 0) : 0;
+    const seekTo = Math.min(trimStart + (offsetSec || 0), vid.duration);
+    vid.currentTime = seekTo;
+    updateTC(vid.currentTime, vid.duration);
+    if (autoPlay) {
+      vid.play();
+      document.getElementById('playIco').className = 'ti ti-player-pause';
+      document.getElementById('playBtn').classList.add('playing');
+    }
+  };
+
+  // ใช้ตัวแปรภายนอกเพื่อป้องกัน trimEnd trigger ซ้ำ
+  let trimEndTriggered = false;
+
+  vid.ontimeupdate = () => {
+    const t = vid.currentTime, d = vid.duration || 0;
+
+    // enforce trimEnd — หยุดเมื่อถึง trimEnd แล้วเล่น clip ถัดไป
+    if (activeClipEl && !trimEndTriggered) {
+      const trimEnd = parseFloat(activeClipEl.dataset.trimEnd) || d;
+      if (t >= trimEnd - 0.08) {
+        trimEndTriggered = true;
+        const wasPlaying = !vid.paused;
+        vid.pause();
+        if (wasPlaying) {
+          const snapEl = activeClipEl;
+          setTimeout(() => playNextClipAfter(snapEl), 30);
+        } else {
+          document.getElementById('playIco').className = 'ti ti-player-play';
+          document.getElementById('playBtn').classList.remove('playing');
+        }
+        return;
+      }
+    }
+
+    updateTC(t, d);
+
+    // sync playhead position บน timeline
+    if (activeClipEl) {
+      const trimStart  = parseFloat(activeClipEl.dataset.trimStart) || 0;
+      const trimEnd    = parseFloat(activeClipEl.dataset.trimEnd)   || d;
+      const trimmedDur = Math.max(0.01, trimEnd - trimStart);
+      const cLeft  = parseFloat(activeClipEl.style.left)  || 0;
+      const cWidth = parseFloat(activeClipEl.style.width) || 0;
+      const progress = Math.min(1, Math.max(0, (t - trimStart) / trimmedDur));
+      const phPct = cLeft + progress * cWidth;
+      ['ph0','ph1','ph2','ph3','ph4'].forEach(id => {
+        const e = document.getElementById(id);
+        if (e) e.style.left = Math.min(100, phPct) + '%';
+      });
+      scrTc.textContent = fmtTime(t - trimStart);
+    }
+  };
+
+  vid.onended = () => {
+    // กรณีวิดีโอจบโดย natural end (trimEnd ไม่ได้ตัดก่อน)
+    if (!trimEndTriggered) {
+      trimEndTriggered = true;
+      const wasPlaying = document.getElementById('playIco').className.includes('pause');
+      if (wasPlaying) {
+        const snapEl = activeClipEl;
+        setTimeout(() => playNextClipAfter(snapEl), 30);
+        return;
+      }
+    }
+    document.getElementById('playIco').className = 'ti ti-player-play';
+    document.getElementById('playBtn').classList.remove('playing');
+  };
+
+  vid.volume = document.getElementById('volSlider').value / 100;
+}
+
+// ═══════════════════════════════════════════
+//  PLAYHEAD — ลากได้
+// ═══════════════════════════════════════════
+function setPlayheadPct(pct) {
+  pct = Math.max(0, Math.min(100, pct));
+  ['ph0','ph1','ph2','ph3','ph4'].forEach(id => {
+    const e = document.getElementById(id);
+    if (e) e.style.left = pct + '%';
+  });
+  if (vid.src && vid.duration) {
+    vid.currentTime = (pct / 100) * vid.duration;
+  }
+}
+
+function initPlayheadDrag() {
+  const head = document.getElementById('phHead');
+  const tscale = document.getElementById('tscale');
+
+  // ── helper: drag logic ──
+  function startDrag(e, refEl) {
+    e.preventDefault(); e.stopPropagation();
+    const wasPaused = vid.paused;
+    if (!vid.paused) vid.pause();
+    document.body.style.cursor = 'ew-resize';
+
+    const rect = refEl.getBoundingClientRect();
+
+    function onMove(ev) {
+      const pct = ((ev.clientX - rect.left) / rect.width) * 100;
+      setPlayheadPct(pct);
+      if (vid.duration) {
+        scrTc.textContent = fmtTime(vid.currentTime);
+        updateTC(vid.currentTime, vid.duration);
+      }
+      // sync video by playhead position while dragging
+      syncVideoByPlayhead();
+    }
+    function onUp() {
+      document.body.style.cursor = '';
+      document.removeEventListener('mousemove', onMove);
+      document.removeEventListener('mouseup', onUp);
+      if (!wasPaused) vid.play();
+    }
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+  }
+
+  // ph-head (ลูกบอลบน tscale)
+  if (head) {
+    head.addEventListener('mousedown', e => startDrag(e, tscale));
+  }
+
+  // คลิก tscale เพื่อ seek
+  tscale.addEventListener('mousedown', e => {
+    if (e.target === head) return;
+    startDrag(e, tscale);
+  });
+
+  // เส้น ph-line ใน lane ทุกเส้น — ลากได้โดยตรง
+  ['lv1','lv2','la1','lt1'].forEach(id => {
+    const lane = document.getElementById(id);
+    if (!lane) return;
+
+    // คลิกที่ ph-line ใน lane
+    const phLine = lane.querySelector('.ph-line');
+    if (phLine) {
+      phLine.addEventListener('mousedown', e => {
+        if (e.target.closest('.clip')) return;
+        startDrag(e, lane);
+      });
+    }
+
+    // คลิก lane เพื่อ seek (พื้นที่ว่าง)
+    lane.addEventListener('mousedown', e => {
+      if (e.target.closest('.clip')) return;
+      if (e.target.closest('.ph-line')) return;
+      startDrag(e, lane);
+    });
+  });
+}
+
+function fmtTime(s) {
+  if (!isFinite(s)) return '0:00';
+  const m = Math.floor(s / 60), sec = Math.floor(s % 60);
+  return m + ':' + String(sec).padStart(2, '0');
+}
+
+
+// ── Play / Pause จริง ──
+function togglePlay() {
+  const ico = document.getElementById('playIco');
+  const btn = document.getElementById('playBtn');
+  if (vid.src && vid.readyState >= 1) {
+    if (vid.paused) {
+      vid.play();
+      ico.className = 'ti ti-player-pause';
+      btn.classList.add('playing');
+    } else {
+      vid.pause();
+      ico.className = 'ti ti-player-play';
+      btn.classList.remove('playing');
+    }
+  } else {
+    toast('ลาก Video clip มาวางใน Timeline ก่อน');
+  }
+}
+
+function seekRel(d) {
+  if (vid.src) {
+    vid.currentTime = Math.max(0, Math.min(vid.duration || 0, vid.currentTime + d));
+  }
+}
+
+function setVolume(v) {
+  vid.volume = v / 100;
+}
+
+function setVideoVolume(v) {
+  vid.volume = Math.min(1, v / 100);
+}
+
+function applyFilters() {
+  const br = document.getElementById('sv-br').textContent;
+  const con = document.getElementById('sv-con').textContent;
+  const sat = document.getElementById('sv-sat').textContent;
+  const brightness = 1 + parseInt(br) / 100;
+  const contrast = 1 + parseInt(con) / 100;
+  const saturate = 1 + parseInt(sat) / 100;
+  vid.style.filter = `brightness(${brightness}) contrast(${contrast}) saturate(${saturate})`;
+}
+
+function applyPreset(p) {
+  const presets = {
+    cinematic: 'contrast(1.2) saturate(0.85) brightness(0.95) sepia(0.1)',
+    warm:      'sepia(0.3) saturate(1.3) brightness(1.05)',
+    cool:      'hue-rotate(20deg) saturate(0.9) brightness(1.05)',
+    bw:        'grayscale(1) contrast(1.1)',
+    vintage:   'sepia(0.5) contrast(0.9) brightness(0.9) saturate(0.8)',
+  };
+  if (p && presets[p]) { vid.style.filter = presets[p]; toast('Apply ' + p + ' ✓'); }
+}
+
+function applyOpacity(v) {
+  vid.style.opacity = v / 100;
+}
+
+// ═══════════════════════════════════════════
+//  IMPORT MEDIA — จริง
+// ═══════════════════════════════════════════
+function importMedia() {
+  const inp = document.createElement('input');
+  inp.type = 'file';
+  inp.accept = 'video/*,audio/*,image/*';
+  inp.multiple = true;
+  inp.onchange = e => {
+    Array.from(e.target.files).forEach(addMediaFile);
+  };
+  inp.click();
+}
+
+function addMediaFile(file) {
+  const name = file.name;
+  mediaFiles[name] = file;
+  const isV = file.type.startsWith('video');
+  const isA = file.type.startsWith('audio');
+  const t = isV ? 'v' : isA ? 'a' : 'i';
+
+  const item = document.createElement('div');
+  item.className = 'mitem';
+  item.draggable = true;
+  item.ondragstart = ev => dstart(ev, name, t);
+  item.ondblclick = () => { if (isV) loadVideoPreview(file); };
+
+  const thumb = document.createElement('div');
+  thumb.className = 'mthumb ' + (isV ? 'tv' : isA ? 'ta' : 'ti');
+
+  if (isV) {
+    // สร้าง thumbnail จาก video จริง
+    const tv = document.createElement('video');
+    tv.src = URL.createObjectURL(file);
+    tv.muted = true;
+    tv.preload = 'metadata';
+    tv.onloadeddata = () => { tv.currentTime = 0.5; };
+    tv.onseeked = () => {
+      const c = document.createElement('canvas');
+      c.width = 40; c.height = 28;
+      c.getContext('2d').drawImage(tv, 0, 0, 40, 28);
+      const img = document.createElement('img');
+      img.src = c.toDataURL();
+      thumb.innerHTML = '';
+      thumb.appendChild(img);
+    };
+    thumb.appendChild(tv);
+  } else if (isA) {
+    thumb.innerHTML = `<i class="ti ti-music" style="color:#4dff9a;font-size:13px;"></i>`;
+  } else {
+    const img2 = document.createElement('img');
+    img2.src = URL.createObjectURL(file);
+    img2.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:5px;';
+    thumb.appendChild(img2);
+  }
+
+  const info = document.createElement('div');
+  info.className = 'minfo';
+
+  let dur = isA || isV ? '...' : 'img';
+  if (isV || isA) {
+    const tmpEl = document.createElement(isV ? 'video' : 'audio');
+    tmpEl.src = URL.createObjectURL(file);
+    tmpEl.onloadedmetadata = () => {
+      const d = tmpEl.duration;
+      fileDurations[name] = d;
+      info.querySelector('.mdur').textContent = fmtTime(d);
+      // ถ้าเป็น video และเป็นไฟล์แรก ให้ set timeline duration
+      if (isV && !currentVideoFile) {
+        buildTimescale(d);
+      }
+      updateAllClipWidths();
+    };
+  }
+
+  info.innerHTML = `<div class="mname" title="${name}">${name}</div><div class="mdur">${dur}</div>`;
+  item.appendChild(thumb);
+  item.appendChild(info);
+
+  const list = document.getElementById('mediaList');
+  list.insertBefore(item, list.children[1]);
+  toast('Import ' + name + ' ✓');
+}
+
+// ═══════════════════════════════════════════
+//  TIMESCALE — สร้างตาม duration จริง
+// ═══════════════════════════════════════════
+let timelineDuration = 60; // default จนกว่าจะโหลด video
+
+function buildTimescale(duration) {
+  timelineDuration = duration || 60;
+  const ts = document.getElementById('tscale');
+  ts.innerHTML = '';
+  // เลือก step ที่ดูสะอาด: 1s, 2s, 5s, 10s, 15s, 30s
+  const steps_opts = [1, 2, 5, 10, 15, 30, 60];
+  let step = steps_opts.find(s => (timelineDuration / s) <= 12) || 60;
+  for (let t = 0; t <= timelineDuration + 0.001; t += step) {
+    const p = (t / timelineDuration) * 100;
+    if (p > 100.1) break;
+    const tick = document.createElement('div');
+    tick.className = 'tick'; tick.style.left = p + '%'; ts.appendChild(tick);
+    const lbl = document.createElement('div');
+    lbl.className = 'tlabel'; lbl.style.left = p + '%';
+    lbl.textContent = fmtTime(t); ts.appendChild(lbl);
+  }
+  // อัปเดต clip widths ที่อยู่ใน timeline ให้ตรงกับ duration
+  updateAllClipWidths();
+}
+
+// ── อัปเดต clip width ตาม duration จริงของไฟล์ ──
+function updateAllClipWidths() {
+  timelineClips.forEach(info => {
+    const file = mediaFiles[info.name];
+    if (!file) return;
+    const dur = fileDurations[info.name];
+    if (!dur || !timelineDuration) return;
+    // กว้าง % = (dur / timelineDuration) * 100
+    const wPct = Math.min(100, (dur / timelineDuration) * 100);
+    info.el.style.width = wPct.toFixed(2) + '%';
+    // อัปเดต dataset
+    info.el.dataset.e = fmtTime(parseFloat(info.el.style.left) / 100 * timelineDuration + dur);
+  });
+}
+
+// เริ่มต้น timescale ด้วย placeholder
+(function() {
+  buildTimescale(60);
+  updateDurLabel();
+})();
+
+// ═══════════════════════════════════════════
+//  DRAG FROM SIDEBAR → TIMELINE
+// ═══════════════════════════════════════════
+function dstart(e, n, t) {
+  dragData = { n, t };
+  e.dataTransfer.setData('text/plain', n + '|' + t);
+}
+
+function dropLane(e, lid, laneType) {
+  e.preventDefault();
+  const lane = document.getElementById(lid);
+  lane.classList.remove('drop-target');
+  const raw = e.dataTransfer.getData('text/plain').split('|');
+  const n = raw[0], t = raw[1] || laneType;
+  const rect = lane.getBoundingClientRect();
+  const pct = Math.max(0, Math.min(78, ((e.clientX - rect.left) / rect.width) * 100));
+
+  const clip = document.createElement('div');
+  clip.className = 'clip ' + (t === 'v' ? 'cv' : t === 'a' ? 'ca' : t === 'i' ? 'cv' : 'ct');
+  clip.style.left = pct.toFixed(1) + '%';
+
+  // คำนวณ width จาก duration จริงของไฟล์
+  const fileDur = fileDurations[n];
+  const clipWidthPct = fileDur && timelineDuration
+    ? Math.min(100 - pct, (fileDur / timelineDuration) * 100)
+    : 20;
+  clip.style.width = clipWidthPct.toFixed(2) + '%';
+
+  const startSec = (pct / 100) * timelineDuration;
+  const endSec = startSec + (fileDur || clipWidthPct / 100 * timelineDuration);
+  clip.dataset.n = n;
+  clip.dataset.s = fmtTime(startSec);
+  clip.dataset.e = fmtTime(endSec);
+  clip.dataset.trimStart = '0';
+  clip.dataset.trimEnd   = (fileDur || (clipWidthPct / 100 * timelineDuration)).toFixed(4);
+  clip.textContent = n;
+  attachClip(clip);
+  lane.appendChild(clip);
+  timelineClips.push({ el: clip, name: n, type: t });
+
+  // ถ้าเป็น video และยังไม่มี preview ให้โหลด clip ที่อยู่ซ้ายสุด
+  if (t === 'v' && mediaFiles[n]) {
+    loadEarliestVideoClip();
+  }
+  toast('เพิ่ม ' + n + ' ใน timeline');
+}
+
+// ═══════════════════════════════════════════
+//  CLIP INTERACTION
+// ═══════════════════════════════════════════
+function attachClip(clip) {
+  clip.addEventListener('mousedown', clipMouseDown);
+  clip.addEventListener('contextmenu', clipRightClick);
+  // Add resize handles
+  const lh = document.createElement('div'); lh.className = 'clip-rh left';
+  const rh = document.createElement('div'); rh.className = 'clip-rh right';
+  clip.appendChild(lh); clip.appendChild(rh);
+  lh.addEventListener('mousedown', e => resizeClip(e, clip, 'left'));
+  rh.addEventListener('mousedown', e => resizeClip(e, clip, 'right'));
+}
+
+function resizeClip(e, clip, side) {
+  e.stopPropagation(); e.preventDefault();
+  const lane = clip.parentElement;
+  const laneRect = lane.getBoundingClientRect();
+  const startX = e.clientX;
+  const startL = parseFloat(clip.style.left) || 0;
+  const startW = parseFloat(clip.style.width) || 20;
+
+  // อ่าน trim ปัจจุบัน (วินาที)
+  const name = clip.dataset.n;
+  const fullDur = fileDurations[name] || (startW / 100 * timelineDuration);
+  let trimStart = parseFloat(clip.dataset.trimStart) || 0;
+  let trimEnd   = parseFloat(clip.dataset.trimEnd)   || fullDur;
+
+  function onMove(ev) {
+    const dx = ((ev.clientX - startX) / laneRect.width) * 100;
+    if (side === 'right') {
+      // ย่อ/ขยายขวา → เปลี่ยน trimEnd
+      const newW = Math.max(1, startW + dx);
+      const addedSec = ((newW - startW) / 100) * timelineDuration;
+      const newTrimEnd = Math.min(fullDur, Math.max(trimStart + 0.1, trimEnd + addedSec));
+      const actualW = ((newTrimEnd - trimStart) / fullDur) * (startW / (trimEnd - trimStart) * (trimEnd - trimStart) / timelineDuration * 100);
+      // คำนวณ width จาก trimmed duration
+      const trimmedDur = newTrimEnd - trimStart;
+      const wPct = (trimmedDur / timelineDuration) * 100;
+      clip.style.width = Math.max(0.5, wPct).toFixed(2) + '%';
+      clip.dataset.trimEnd = newTrimEnd.toFixed(4);
+    } else {
+      // ย่อ/ขยายซ้าย → เปลี่ยน trimStart
+      const newL = Math.max(0, startL + dx);
+      const movedSec = ((newL - startL) / 100) * timelineDuration;
+      const newTrimStart = Math.min(trimEnd - 0.1, Math.max(0, trimStart + movedSec));
+      const trimmedDur = trimEnd - newTrimStart;
+      const wPct = (trimmedDur / timelineDuration) * 100;
+      clip.style.left  = newL.toFixed(2) + '%';
+      clip.style.width = Math.max(0.5, wPct).toFixed(2) + '%';
+      clip.dataset.trimStart = newTrimStart.toFixed(4);
+    }
+    updateClipDataset(clip);
+    // อัปเดต preview ถ้าเป็น clip ที่กำลัง active
+    if (mediaFiles[name] === currentVideoFile) {
+      const ts = parseFloat(clip.dataset.trimStart) || 0;
+      if (vid.currentTime < ts) vid.currentTime = ts;
+      const te = parseFloat(clip.dataset.trimEnd) || fullDur;
+      if (vid.currentTime > te) vid.currentTime = te;
+    }
+  }
+  function onUp() {
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+    // sync video to trimStart ถ้าเป็น clip ที่ active
+    if (mediaFiles[name] === currentVideoFile) {
+      const ts = parseFloat(clip.dataset.trimStart) || 0;
+      vid.currentTime = ts;
+    }
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+function updateClipDataset(clip) {
+  const lPct = parseFloat(clip.style.left) || 0;
+  const wPct = parseFloat(clip.style.width) || 0;
+  const startSec = (lPct / 100) * timelineDuration;
+  const endSec   = ((lPct + wPct) / 100) * timelineDuration;
+  clip.dataset.s = fmtTime(startSec);
+  clip.dataset.e = fmtTime(endSec);
+}
+
+function selclip(e, el) {
+  e.stopPropagation();
+  if (selClip) selClip.classList.remove('sel');
+  selClip = el; el.classList.add('sel');
+  document.getElementById('pname').textContent = el.dataset.n || el.textContent.trim();
+  document.getElementById('pst').value = el.dataset.s || '0:00';
+  document.getElementById('pen').value = el.dataset.e || '—';
+  // preview ถ้าเป็น video
+  const name = el.dataset.n;
+  if (mediaFiles[name] && mediaFiles[name].type.startsWith('video')) {
+    activeClipEl = el;
+    const trimStart = parseFloat(el.dataset.trimStart) || 0;
+    loadVideoPreviewAt(mediaFiles[name], 0, el);
+  }
+}
+
+function clipMouseDown(e) {
+  if (e.button !== 0) return;
+  e.preventDefault(); e.stopPropagation();
+  const clip = this;
+  selclip(e, clip);
+  const lane = clip.parentElement;
+  if (!lane.classList.contains('lane')) return;
+  const laneRect = lane.getBoundingClientRect();
+  const startX = e.clientX;
+  const startLeft = parseFloat(clip.style.left) || 0;
+  const clipW = parseFloat(clip.style.width) || 20;
+  clip.classList.add('dragging');
+  function onMove(ev) {
+    const dx = ev.clientX - startX;
+    const dpct = (dx / laneRect.width) * 100;
+    clip.style.left = Math.max(0, Math.min(100 - clipW, startLeft + dpct)).toFixed(2) + '%';
+  }
+  function onUp() {
+    clip.classList.remove('dragging');
+    document.removeEventListener('mousemove', onMove);
+    document.removeEventListener('mouseup', onUp);
+  }
+  document.addEventListener('mousemove', onMove);
+  document.addEventListener('mouseup', onUp);
+}
+
+const ctxEl = document.getElementById('ctx');
+function clipRightClick(e) {
+  e.preventDefault(); e.stopPropagation();
+  ctxClip = this; selclip(e, this);
+  document.getElementById('ctxClipName').textContent = this.dataset.n || this.textContent.trim();
+  ctxEl.style.left = Math.min(e.clientX, window.innerWidth - 210) + 'px';
+  ctxEl.style.top = Math.min(e.clientY, window.innerHeight - 220) + 'px';
+  ctxEl.classList.add('on');
+}
+document.addEventListener('click', () => ctxEl.classList.remove('on'));
+
+function ctxAIEnhance() { ctxEl.classList.remove('on'); qai('enhance ' + (ctxClip ? ctxClip.dataset.n : '')); }
+function ctxAICut() { ctxEl.classList.remove('on'); qai('ตัดต่ออัตโนมัติ'); }
+function ctxAISubtitle() { ctxEl.classList.remove('on'); qai('subtitle'); }
+function ctxColorGrade() { ctxEl.classList.remove('on'); qai('color grade'); }
+function ctxSplit() { ctxEl.classList.remove('on'); splitClip(); }
+function ctxDuplicate() {
+  ctxEl.classList.remove('on');
+  if (!ctxClip) return;
+  const lane = ctxClip.parentElement;
+  const clone = ctxClip.cloneNode(false);
+  clone.textContent = ctxClip.dataset.n;
+  const nL = Math.min(90, parseFloat(ctxClip.style.left || 0) + parseFloat(ctxClip.style.width || 20) + 1);
+  clone.style.left = nL.toFixed(1) + '%';
+  clone.classList.remove('sel');
+  attachClip(clone);
+  lane.appendChild(clone);
+  timelineClips.push({ el: clone, name: clone.dataset.n, type: 'v' });
+  toast('Duplicate ✓');
+}
+function ctxDelete() { ctxEl.classList.remove('on'); deleteClip(); }
+
+// ═══════════════════════════════════════════
+//  TOOLBAR ACTIONS
+// ═══════════════════════════════════════════
+function ltab(el) {
+  document.querySelectorAll('.ltab').forEach(t => t.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function addText() {
+  const lane = document.getElementById('lt1');
+  const c = document.createElement('div');
+  c.className = 'clip ct';
+  c.style.left = '10%'; c.style.width = '22%';
+  c.dataset.n = 'Text'; c.dataset.s = '0:05'; c.dataset.e = '0:15';
+  c.textContent = 'Text Layer';
+  attachClip(c); lane.appendChild(c);
+  toast('เพิ่ม Text Layer');
+}
+
+// ═══════════════════════════════════════════
+//  DURATION CONTROL
+// ═══════════════════════════════════════════
+function updateDurLabel() {
+  const el = document.getElementById('durLabel');
+  if (el) el.textContent = fmtTime(timelineDuration);
+}
+function changeDuration(deltaSec) {
+  const newDur = Math.max(10, timelineDuration + deltaSec);
+  buildTimescale(newDur);
+  updateDurLabel();
+  toast('Timeline: ' + fmtTime(newDur));
+}
+function openDurInput() {
+  const inp = document.getElementById('durInput');
+  const disp = document.getElementById('durDisplay');
+  inp.value = fmtTime(timelineDuration);
+  inp.classList.add('on');
+  disp.style.display = 'none';
+  inp.focus(); inp.select();
+}
+function hideDurInput() {
+  document.getElementById('durInput').classList.remove('on');
+  document.getElementById('durDisplay').style.display = '';
+}
+function applyDurInput() {
+  const val = document.getElementById('durInput').value.trim();
+  let sec = 0;
+  if (val.includes(':')) {
+    const p = val.split(':');
+    sec = parseInt(p[0] || 0) * 60 + parseFloat(p[1] || 0);
+  } else {
+    sec = parseFloat(val);
+  }
+  if (sec >= 5 && isFinite(sec)) {
+    buildTimescale(sec);
+    updateDurLabel();
+    toast('Timeline: ' + fmtTime(sec));
+  }
+  hideDurInput();
+}
+
+// ═══════════════════════════════════════════
+//  ZOOM
+// ═══════════════════════════════════════════
+let zoomLevel = 2;
+function changeZoom(delta) {
+  const sl = document.getElementById('zoomSlider');
+  zoomLevel = Math.max(1, Math.min(8, zoomLevel + delta));
+  if (sl) sl.value = zoomLevel;
+  applyZoom(zoomLevel);
+}
+function applyZoom(val) {
+  zoomLevel = parseFloat(val);
+  const tracksEl = document.getElementById('tracks');
+  tracksEl.querySelectorAll('.lane, .tscale').forEach(l => {
+    l.style.minWidth = (zoomLevel >= 2 ? zoomLevel * 50 : 100) + '%';
+  });
+}
+
+// ═══════════════════════════════════════════
+//  SPLIT — ตัดทุก clip ที่ playhead ทับ (ไม่ต้องเลือก)
+// ═══════════════════════════════════════════
+function splitClip() {
+  const phPct = parseFloat(document.getElementById('ph1').style.left) || 0;
+  const phSec = (phPct / 100) * timelineDuration;
+  const laneIds = ['lv1','lv2','la1','lt1'];
+  let splitCount = 0;
+
+  laneIds.forEach(lid => {
+    const lane = document.getElementById(lid);
+    if (!lane) return;
+    const isAudio = lid === 'la1';
+    const clips = Array.from(lane.querySelectorAll('.clip'))
+      .sort((a, b) => parseFloat(a.style.left) - parseFloat(b.style.left));
+
+    clips.forEach(clip => {
+      const origL = parseFloat(clip.style.left) || 0;
+      const origW = parseFloat(clip.style.width) || 0;
+      const name  = clip.dataset.n || '';
+      const fullDur    = fileDurations[name] || (origW / 100 * timelineDuration);
+      const trimStart  = parseFloat(clip.dataset.trimStart) || 0;
+      const trimEnd    = parseFloat(clip.dataset.trimEnd)   || fullDur;
+      const trimmedDur = trimEnd - trimStart;
+      const clipTLStart = (origL / 100) * timelineDuration;
+      const clipTLEnd   = clipTLStart + trimmedDur;
+
+      if (phSec <= clipTLStart + 0.033 || phSec >= clipTLEnd - 0.033) return;
+
+      const offsetInClip = phSec - clipTLStart;
+      const splitTrimSec = trimStart + offsetInClip;
+      const aWidthPct    = (offsetInClip / timelineDuration) * 100;
+
+      clip.style.width     = aWidthPct.toFixed(2) + '%';
+      clip.dataset.trimEnd = splitTrimSec.toFixed(4);
+      updateClipDataset(clip);
+
+      const bDurSec   = trimEnd - splitTrimSec;
+      const bWidthPct = (bDurSec / timelineDuration) * 100;
+      const bLeftPct  = origL + aWidthPct;
+
+      const c2 = document.createElement('div');
+      c2.className         = clip.className.replace(' sel','');
+      c2.style.left        = bLeftPct.toFixed(2) + '%';
+      c2.style.width       = bWidthPct.toFixed(2) + '%';
+      c2.dataset.n         = name;
+      c2.dataset.trimStart = splitTrimSec.toFixed(4);
+      c2.dataset.trimEnd   = trimEnd.toFixed(4);
+      c2.textContent       = name;
+      updateClipDataset(c2);
+      attachClip(c2);
+      lane.appendChild(c2);
+      timelineClips.push({ el: c2, name, type: isAudio ? 'a' : 'v' });
+      splitCount++;
+    });
+  });
+
+  if (splitCount === 0) toast('ไม่มี Clip อยู่ที่ Playhead');
+  else toast('Split ' + splitCount + ' clip ✓ ที่ ' + fmtTime(phSec));
+}
+
+// ═══════════════════════════════════════════
+//  AUTO PLAY NEXT CLIP
+// ═══════════════════════════════════════════
+function findNextClip(currentClipEl) {
+  const cLeft  = parseFloat(currentClipEl.style.left)  || 0;
+  const cWidth = parseFloat(currentClipEl.style.width) || 0;
+  const cEnd   = cLeft + cWidth; // % บน timeline
+  const allLanes = ['lv1','lv2','la1','lt1'];
+  let bestClip = null, bestLeft = Infinity;
+
+  allLanes.forEach(lid => {
+    const lane = document.getElementById(lid);
+    if (!lane) return;
+    Array.from(lane.querySelectorAll('.clip')).forEach(c => {
+      if (c === currentClipEl) return;
+      const n = c.dataset.n;
+      if (!n || !mediaFiles[n] || !mediaFiles[n].type.startsWith('video')) return;
+      const cL = parseFloat(c.style.left) || 0;
+      if (cL >= cEnd - 1.5 && cL < bestLeft) { bestLeft = cL; bestClip = c; }
+    });
+  });
+  return bestClip;
+}
+
+function playNextClipAfter(finishedClipEl) {
+  const next = findNextClip(finishedClipEl);
+  if (!next) {
+    document.getElementById('playIco').className = 'ti ti-player-play';
+    document.getElementById('playBtn').classList.remove('playing');
+    return;
+  }
+  const file = mediaFiles[next.dataset.n];
+  if (!file) return;
+  const nLeft = parseFloat(next.style.left) || 0;
+  ['ph0','ph1','ph2','ph3','ph4'].forEach(id => {
+    const e = document.getElementById(id);
+    if (e) e.style.left = nLeft + '%';
+  });
+  currentVideoFile = file;
+  activeClipEl = next;
+  loadVideoPreviewAt(file, 0, next, true);
+}
+
+function deleteClip() {
+  if (!selClip) { toast('เลือก clip ก่อน'); return; }
+  const name = selClip.dataset.n;
+  if (mediaFiles[name] === currentVideoFile) {
+    vid.pause(); vid.src = '';
+    vid.style.display = 'none';
+    currentVideoFile = null; activeClipEl = null;
+    screenPh.style.display = '';
+    scrTc.style.display = 'none'; scrLabel.style.display = 'none';
+    document.getElementById('playIco').className = 'ti ti-player-play';
+    document.getElementById('playBtn').classList.remove('playing');
+    updateTC(0, 0);
+  }
+  const idx = timelineClips.findIndex(c => c.el === selClip);
+  if (idx > -1) timelineClips.splice(idx, 1);
+  selClip.remove(); selClip = null;
+  document.getElementById('pname').textContent = '—';
+  document.getElementById('pst').value = '0:00';
+  document.getElementById('pen').value = '—';
+  loadEarliestVideoClip();
+  toast('ลบ clip แล้ว ✓');
+}
+
+// ═══════════════════════════════════════════
+//  AI (mock suggestions)
+// ═══════════════════════════════════════════
+const aiMap = {
+  cut:   { t: 'AI Auto Cut',    b: ['ตัด intro เหลือ 8 วิ', 'ลบช่วงเงียบ 0:22–0:30', 'Jump cut ที่ 0:45', 'ยุบ scene_02 เหลือ 20 วิ'] },
+  color: { t: 'AI Color Grade', b: ['LUT: Cinematic Teal & Orange', 'Shadows −15 / Highlights +8', 'Vignette 30%', 'Color temp → 5200K'] },
+  beat:  { t: 'AI Beat Sync',   b: ['Beat ที่ 0:04 / 0:12 / 0:24 / 0:36', 'Cut ตรงทุก beat', 'Flash cut ที่ downbeat', 'Sync transition กับ chorus'] },
+  noise: { t: 'AI Noise Removal', b: ['Background noise −32dB', 'ลด noise floor 28dB', 'EQ cut 200Hz', 'Clarity +85%'] },
+  subtitle: { t: 'AI Subtitle', b: ['พบคำพูด 142 คำ (94%)', 'สร้าง subtitle 18 บรรทัด', 'ภาษา: ไทย/อังกฤษ', 'Export .srt พร้อม'] },
+  trans: { t: 'AI Transitions', b: ['intro→scene_01: Cross Dissolve 0.8s', 'scene_01→scene_02: Wipe Left', 'Motion blur นุ่ม', 'Match cut 0:46'] },
+};
+
+function sendAI() {
+  const i = document.getElementById('aiIn');
+  const q = i.value.trim();
+  if (!q) return;
+  qai(q); i.value = '';
+}
+
+function qai(q) {
+  const out = document.getElementById('aiOut');
+  out.className = 'ai-out on';
+  out.innerHTML = '<div class="ai-thinking"><i class="ti ti-robot" style="font-size:13px;"></i>&nbsp; AI กำลังวิเคราะห์... <span class="dots"><span>.</span><span>.</span><span>.</span></span></div>';
+  setTimeout(() => {
+    const l = q.toLowerCase(); let r;
+    if (l.includes('ตัด') || l.includes('cut')) r = aiMap.cut;
+    else if (l.includes('color') || l.includes('สี')) r = aiMap.color;
+    else if (l.includes('beat') || l.includes('จังหวะ')) r = aiMap.beat;
+    else if (l.includes('noise') || l.includes('เสียง')) r = aiMap.noise;
+    else if (l.includes('sub') || l.includes('subtitle')) r = aiMap.subtitle;
+    else if (l.includes('trans')) r = aiMap.trans;
+    else r = { t: 'AI Analysis', b: ['วิเคราะห์ timeline: ' + timelineClips.length + ' clips', 'แนะนำปรับ pacing', 'เพิ่ม b-roll ช่วง 0:30–0:40', 'ตรวจ color consistency'] };
+    out.innerHTML = `<div class="ai-result"><strong>✦ ${r.t}</strong><ul>${r.b.map(b => '<li>' + b + '</li>').join('')}</ul><button class="apply-btn" onclick="toast('Apply ✓')">Apply changes</button></div>`;
+  }, 1000);
+}
+
+// ═══════════════════════════════════════════
+//  EXPORT จริง — MediaRecorder + download
+// ═══════════════════════════════════════════
+function openExport() {
+  document.getElementById('modal').classList.add('on');
+  document.getElementById('expNote').style.display = 'block';
+  const hasVideo = vid.src && vid.readyState >= 1;
+  document.getElementById('expNote').textContent = hasVideo
+    ? '📌 Export จะบันทึก video ที่อยู่ใน preview และดาวน์โหลดไฟล์จริงลงเครื่องคุณ'
+    : '⚠️ ยังไม่มี video ใน preview — ลาก video clip มาวางใน Timeline ก่อน';
+}
+
+function closeModal() {
+  if (isExporting) {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    isExporting = false;
+  }
+  document.getElementById('modal').classList.remove('on');
+  document.getElementById('pbar').style.width = '0%';
+  document.getElementById('prog').classList.remove('on');
+  const estat = document.getElementById('estat');
+  estat.style.display = 'none';
+  estat.style.color = '';
+  document.getElementById('exportRunBtn').disabled = false;
+  document.getElementById('exportRunBtn').textContent = 'Export';
+}
+
+function startExport() {
+  if (!vid.src || vid.readyState < 1) {
+    toast('ลาก Video มาวางใน Timeline ก่อน');
+    return;
+  }
+
+  const fname = document.getElementById('fname').value || 'export';
+  const format = document.getElementById('expFormat').value;
+  const bitrate = parseInt(document.getElementById('expQuality').value);
+  const mimeType = format === 'webm' ? 'video/webm;codecs=vp9' : 'video/mp4';
+  const ext = format;
+
+  // ตรวจสอบ codec support
+  const supported = MediaRecorder.isTypeSupported(mimeType) ||
+                    MediaRecorder.isTypeSupported('video/webm;codecs=vp8') ||
+                    MediaRecorder.isTypeSupported('video/webm');
+
+  if (!supported && format === 'mp4') {
+    toast('browser ไม่รองรับ MP4 — ใช้ WebM แทน');
+    document.getElementById('expFormat').value = 'webm';
+    return;
+  }
+
+  const prog = document.getElementById('prog');
+  const bar = document.getElementById('pbar');
+  const stat = document.getElementById('estat');
+  prog.classList.add('on');
+  stat.style.display = 'block';
+  stat.style.color = '';
+  stat.textContent = 'กำลัง setup...';
+
+  const btn = document.getElementById('exportRunBtn');
+  btn.disabled = true;
+  btn.textContent = 'กำลัง Export...';
+  isExporting = true;
+  recordedChunks = [];
+
+  // capture stream จาก video element
+  let stream;
+  try {
+    stream = vid.captureStream ? vid.captureStream() : vid.mozCaptureStream();
+  } catch (err) {
+    stat.textContent = '❌ browser ไม่รองรับ captureStream';
+    stat.style.color = '#ff6b6b';
+    btn.disabled = false; btn.textContent = 'Export';
+    return;
+  }
+
+  const useMime = MediaRecorder.isTypeSupported(mimeType) ? mimeType :
+                  MediaRecorder.isTypeSupported('video/webm;codecs=vp8') ? 'video/webm;codecs=vp8' :
+                  'video/webm';
+
+  mediaRecorder = new MediaRecorder(stream, { mimeType: useMime, videoBitsPerSecond: bitrate });
+
+  mediaRecorder.ondataavailable = e => {
+    if (e.data.size > 0) recordedChunks.push(e.data);
+  };
+
+  mediaRecorder.onstop = () => {
+    isExporting = false;
+    const blob = new Blob(recordedChunks, { type: useMime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fname + '.' + (useMime.includes('mp4') ? 'mp4' : 'webm');
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+
+    bar.style.width = '100%';
+    stat.textContent = '✓ ดาวน์โหลด ' + fname + '.' + ext + ' สำเร็จ!';
+    stat.style.color = '#4dff9a';
+    btn.disabled = false;
+    btn.textContent = 'Export อีกครั้ง';
+    toast('Export เสร็จ ✓ ตรวจสอบใน Downloads');
+  };
+
+  mediaRecorder.onerror = err => {
+    stat.textContent = '❌ Error: ' + err.message;
+    stat.style.color = '#ff6b6b';
+    btn.disabled = false; btn.textContent = 'Export';
+    isExporting = false;
+  };
+
+  // เล่น video ตั้งแต่ต้น แล้ว record
+  vid.currentTime = 0;
+  vid.muted = false;
+
+  vid.oncanplay = null;
+  const doRecord = () => {
+    mediaRecorder.start(100); // เก็บทุก 100ms
+    vid.play();
+    stat.textContent = 'กำลัง record... (รอจน video จบ)';
+
+    // progress bar ตามเวลา video
+    const duration = vid.duration;
+    const progIv = setInterval(() => {
+      if (!isExporting) { clearInterval(progIv); return; }
+      const p = duration > 0 ? (vid.currentTime / duration) * 100 : 0;
+      bar.style.width = p.toFixed(1) + '%';
+      stat.textContent = 'กำลัง record... ' + fmtTime(vid.currentTime) + ' / ' + fmtTime(duration);
+    }, 200);
+
+    // หยุดเมื่อ video จบ
+    vid.onended = () => {
+      clearInterval(progIv);
+      if (mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+      // restore onended
+      vid.onended = () => {
+        document.getElementById('playIco').className = 'ti ti-player-play';
+        document.getElementById('playBtn').classList.remove('playing');
+      };
+    };
+  };
+
+  if (vid.readyState >= 3) {
+    doRecord();
+  } else {
+    vid.oncanplaythrough = () => { vid.oncanplaythrough = null; doRecord(); };
+    vid.load();
+  }
+}
+
+// ═══════════════════════════════════════════
+//  TOAST
+// ═══════════════════════════════════════════
+let tt = null;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.style.opacity = '1';
+  clearTimeout(tt);
+  tt = setTimeout(() => el.style.opacity = '0', 2500);
+}
+
+// ── deselect clip ──
+document.addEventListener('click', e => {
+  if (!e.target.closest('.clip') && !e.target.closest('.right')) {
+    if (selClip) { selClip.classList.remove('sel'); selClip = null; }
+  }
+});
+
+// init playhead drag
+initPlayheadDrag();
+
+// ═══════════════════════════════════════════
+//  AI CUT — Auto Overlap 4 frames + Transition Overlay
+// ═══════════════════════════════════════════
+const FPS = 30; // assume 30fps
+const OVERLAP_FRAMES = 4;
+const TRANSITION_TYPES = ['Cross Dissolve','Wipe Left','Zoom Blur','Flash Cut','Glitch'];
+
+function runAICut() {
+  const fab = document.getElementById('aiCutFab');
+  const log = document.getElementById('aiCutLog');
+  const bubble = document.getElementById('aiCutResult');
+
+  // เก็บ clips บน V1 lane เรียงลำดับตาม left position
+  const lv1 = document.getElementById('lv1');
+  const v1Clips = Array.from(lv1.querySelectorAll('.clip'))
+    .sort((a, b) => parseFloat(a.style.left) - parseFloat(b.style.left));
+
+  if (v1Clips.length < 2) {
+    toast('ต้องมีคลิปบน V1 อย่างน้อย 2 คลิปก่อนใช้ AI Cut');
+    return;
+  }
+
+  // start animation
+  fab.classList.add('running');
+  fab.querySelector('span').textContent = 'กำลังตัด...';
+  log.innerHTML = '';
+  bubble.classList.remove('on');
+
+  setTimeout(() => {
+    const overlapPct = (OVERLAP_FRAMES / FPS / timelineDuration) * 100;
+    const logs = [];
+    const lv2 = document.getElementById('lv2'); // transition lane
+
+    // ลบ transition clips เก่าออกก่อน (ถ้ามี)
+    lv2.querySelectorAll('.clip.cfx-trans').forEach(c => c.remove());
+
+    for (let i = 0; i < v1Clips.length - 1; i++) {
+      const clipA = v1Clips[i];
+      const clipB = v1Clips[i + 1];
+
+      const aLeft  = parseFloat(clipA.style.left)  || 0;
+      const aWidth = parseFloat(clipA.style.width) || 20;
+      const bLeft  = parseFloat(clipB.style.left)  || 0;
+      const bWidth = parseFloat(clipB.style.width) || 20;
+
+      // 1) ย่อ clip A ด้านขวา (ซ้อนกัน overlapPct)
+      const newAWidth = Math.max(3, aWidth - overlapPct / 2);
+      clipA.style.width = newAWidth.toFixed(2) + '%';
+
+      // 2) เลื่อน clip B ซ้ายเข้ามา overlapPct/2
+      const newBLeft = Math.max(0, bLeft - overlapPct / 2);
+      clipB.style.left = newBLeft.toFixed(2) + '%';
+
+      // 3) วาง transition clip บน V2 ตรงจุด overlap
+      const transLeft  = aLeft + newAWidth;                    // จุดที่ A สิ้นสุด (ก่อน trim)
+      const transWidth = overlapPct;                            // กว้าง = 4 frames
+      const transType  = TRANSITION_TYPES[i % TRANSITION_TYPES.length];
+
+      const tc = document.createElement('div');
+      tc.className = 'clip cfx cfx-trans';
+      tc.style.left  = Math.max(0, transLeft - overlapPct * 0.5).toFixed(2) + '%';
+      tc.style.width = Math.max(0.8, transWidth).toFixed(2) + '%';
+      tc.dataset.n   = transType;
+      tc.dataset.s   = fmtTime((transLeft / 100) * timelineDuration);
+      tc.dataset.e   = fmtTime(((transLeft + transWidth) / 100) * timelineDuration);
+      tc.textContent = transType;
+      attachClip(tc);
+      lv2.appendChild(tc);
+
+      // บันทึก log
+      const clipAName = clipA.dataset.n || clipA.textContent.replace(/[✂⋯]/g,'').trim();
+      const clipBName = clipB.dataset.n || clipB.textContent.replace(/[✂⋯]/g,'').trim();
+      logs.push(`${clipAName} → ${clipBName}: <b style="color:#c084fc">${transType}</b> (${OVERLAP_FRAMES}f)`);
+    }
+
+    // done
+    fab.classList.remove('running');
+    fab.querySelector('span').textContent = 'AI CUT';
+
+    log.innerHTML = logs.map(l => `<li>${l}</li>`).join('');
+    bubble.classList.add('on');
+    toast(`✦ AI Cut เพิ่ม ${logs.length} transitions บน V2 ✓`);
+  }, 1400);
+}
+</script>
+</body>
+</html>
