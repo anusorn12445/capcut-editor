@@ -1638,27 +1638,38 @@ function dropLane(e, lid, laneType) {
   lane.classList.remove('drop-target');
   const raw = e.dataTransfer.getData('text/plain').split('|');
   const n = raw[0], t = raw[1] || laneType;
-  const rect = lane.getBoundingClientRect();
-  const pct = Math.max(0, Math.min(78, ((e.clientX - rect.left) / rect.width) * 100));
+
+  // ── SNAP อัตโนมัติ ── คลิปแรกของแลนนี้เริ่มที่ 0 วินาที, คลิปถัดไปต่อท้ายคลิปสุดท้ายในแลนเดียวกัน
+  // (ไม่สนตำแหน่งเมาส์ — ผู้ใช้ลากย้ายเองได้ภายหลัง)
+  let startSec = 0;
+  lane.querySelectorAll('.clip').forEach(c => {
+    const eSec = clipTimelineEndSec(c);
+    if (eSec > startSec) startSec = eSec;
+  });
+
+  // ความยาว (วินาที) ของคลิปใหม่ — ใช้ duration จริงของไฟล์ ถ้าไม่รู้ใช้ค่า fallback
+  const fileDur = fileDurations[n];
+  const durSec = fileDur || (timelineDuration ? (timelineDuration * 0.2) : 5);
+  let endSec = startSec + durSec;
+
+  // ต่อท้ายแล้วยาวเกิน timeline → ขยาย timeline อัตโนมัติ (คงตำแหน่งวินาทีของคลิปเดิมไว้)
+  if (endSec > timelineDuration) {
+    buildTimescale(endSec);
+    updateDurLabel();
+  }
+
+  const leftPct = (startSec / timelineDuration) * 100;
+  const widthPct = Math.max(0.5, (durSec / timelineDuration) * 100);
 
   const clip = document.createElement('div');
   clip.className = 'clip ' + (t === 'v' ? 'cv' : t === 'a' ? 'ca' : t === 'i' ? 'cv' : 'ct');
-  clip.style.left = pct.toFixed(1) + '%';
-
-  // คำนวณ width จาก duration จริงของไฟล์
-  const fileDur = fileDurations[n];
-  const clipWidthPct = fileDur && timelineDuration
-    ? Math.min(100 - pct, (fileDur / timelineDuration) * 100)
-    : 20;
-  clip.style.width = clipWidthPct.toFixed(2) + '%';
-
-  const startSec = (pct / 100) * timelineDuration;
-  const endSec = startSec + (fileDur || clipWidthPct / 100 * timelineDuration);
+  clip.style.left = leftPct.toFixed(2) + '%';
+  clip.style.width = widthPct.toFixed(2) + '%';
   clip.dataset.n = n;
   clip.dataset.s = fmtTime(startSec);
   clip.dataset.e = fmtTime(endSec);
   clip.dataset.trimStart = '0';
-  clip.dataset.trimEnd   = (fileDur || (clipWidthPct / 100 * timelineDuration)).toFixed(4);
+  clip.dataset.trimEnd   = durSec.toFixed(4);
   clip.textContent = n;
   attachClip(clip);
   lane.appendChild(clip);
@@ -1668,7 +1679,7 @@ function dropLane(e, lid, laneType) {
   if (t === 'v' && mediaFiles[n]) {
     redrawPreview();
   }
-  toast('เพิ่ม ' + n + ' ใน timeline');
+  toast('เพิ่ม ' + n + ' — snap ที่ ' + fmtTime(startSec));
 }
 
 // ═══════════════════════════════════════════
