@@ -430,8 +430,8 @@ select,input[type=text],input[type=number]{color-scheme:dark;}
           <span class="achip" onclick="qai('subtitle')"><i class="ti ti-closed-caption" style="font-size:11px;"></i> Subtitle</span>
           <select id="subQuality" class="achip" title="ความแม่นยำของ Subtitle — ใหญ่ขึ้น = แม่นขึ้นแต่โหลด/ประมวลผลช้าลง" style="cursor:pointer;padding:3px 7px;outline:none;">
             <option value="Xenova/whisper-tiny">⚡ เร็ว (tiny)</option>
-            <option value="Xenova/whisper-base" selected>⭐ สมดุล (base)</option>
-            <option value="Xenova/whisper-small">🎯 แม่นสุด (small)</option>
+            <option value="Xenova/whisper-base">⭐ สมดุล (base)</option>
+            <option value="Xenova/whisper-small" selected>🎯 แม่นสุด (small)</option>
           </select>
           <span class="achip" id="asrEngineChip" onclick="openSubtitleSetup()" title="เลือก/เชื่อมต่อเครื่องมือถอดเสียง (Whisper API จริง)"><i class="ti ti-plug" style="font-size:11px;"></i> <span id="asrEngineLabel">Whisper: ในเครื่อง</span></span>
           <span class="achip" onclick="qai('transition')">Transitions</span>
@@ -519,7 +519,7 @@ select,input[type=text],input[type=number]{color-scheme:dark;}
         <button class="dur-btn" onclick="changeDuration(-30)" title="-30s">−</button>
         <div class="dur-display" id="durDisplay" onclick="openDurInput()" title="คลิกเพื่อแก้ไข">
           <i class="ti ti-clock" style="font-size:10px;opacity:.6;"></i>
-          <span id="durLabel">1:00</span>
+          <span id="durLabel">1:10</span>
         </div>
         <button class="dur-btn" onclick="changeDuration(+30)" title="+30s">+</button>
       </div>
@@ -1486,8 +1486,8 @@ function addMediaFile(file) {
       const d = tmpEl.duration;
       fileDurations[name] = d;
       info.querySelector('.mdur').textContent = fmtTime(d);
-      // ถ้าเป็น video และยังไม่มี clip บน timeline ให้ตั้ง timeline duration ตามไฟล์แรก
-      if (isV && getVideoClipsInOrder().length === 0) {
+      // video แรก: ขยาย timeline ตามไฟล์ถ้ายาวกว่า default แต่ไม่หดต่ำกว่า 1:10
+      if (isV && getVideoClipsInOrder().length === 0 && d > timelineDuration) {
         buildTimescale(d);
       }
       updateAllClipWidths();
@@ -1575,7 +1575,7 @@ function deleteMedia(name) {
 // ═══════════════════════════════════════════
 //  TIMESCALE — สร้างตาม duration จริง
 // ═══════════════════════════════════════════
-let timelineDuration = 60; // default จนกว่าจะโหลด video
+let timelineDuration = 70; // default 1:10 (จนกว่าจะโหลด/ต่อคลิปยาวกว่า)
 
 function buildTimescale(duration) {
   const oldDur = timelineDuration;        // เก็บ duration เดิมไว้ reposition clips
@@ -1632,7 +1632,7 @@ function updateAllClipWidths(oldDur) {
 
 // เริ่มต้น timescale ด้วย placeholder
 (function() {
-  buildTimescale(60);
+  buildTimescale(70);
   updateDurLabel();
 })();
 
@@ -2385,7 +2385,7 @@ async function generateSubtitles() {
     } else {
       // ── ถอดเสียงในเครื่องด้วย transformers.js (Whisper on-device) ──
       const qsel = document.getElementById('subQuality');
-      const model = (qsel && qsel.value) || 'Xenova/whisper-base';
+      const model = (qsel && qsel.value) || 'Xenova/whisper-small';
       const short = model.split('/').pop();
       if (!asrPipelines[model]) {
         const t = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
