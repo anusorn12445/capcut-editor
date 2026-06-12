@@ -910,7 +910,8 @@ function syncTrack(laneId, sec, play) {
   const targetT = trimStart + (sec - clipTimelineStartSec(clip));
   if (tv.el.readyState >= 1) {
     const dur = tv.el.duration || targetT;
-    if (!play || Math.abs(tv.el.currentTime - targetT) > 0.3) {
+    // ตอนเล่น: ปล่อยให้วิดีโอเล่นเอง ไม่ seek ถี่ (iOS seek แพงมาก → กระตุก) แก้เฉพาะเมื่อเหลื่อมจริง > 0.6s
+    if (!play || Math.abs(tv.el.currentTime - targetT) > 0.6) {
       try { tv.el.currentTime = Math.max(0, Math.min(targetT, dur)); } catch (e) {}
     }
     if (play) { if (tv.el.paused) tv.el.play().catch(() => {}); }
@@ -945,7 +946,7 @@ function syncAudioLane(sec, play) {
   const targetT = trimStart + (sec - clipTimelineStartSec(clip));
   tv.el.muted = false; tv.el.volume = masterVolume;
   if (tv.el.readyState >= 1) {
-    if (!play || Math.abs(tv.el.currentTime - targetT) > 0.3) {
+    if (!play || Math.abs(tv.el.currentTime - targetT) > 0.6) {
       try { tv.el.currentTime = Math.max(0, Math.min(targetT, tv.el.duration || targetT)); } catch (e) {}
     }
     if (play) { if (tv.el.paused) tv.el.play().catch(() => {}); }
@@ -957,7 +958,7 @@ function syncAudioLane(sec, play) {
 function drawCompositeTo(ctx, cw, ch, sec) {
   if (!ctx) return;
   ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.filter = 'none';
-  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'low'; // 'high' ช้ามากบน Safari/iOS
   ctx.fillStyle = '#000'; ctx.fillRect(0, 0, cw, ch);
   const lanesBottomUp = getVideoLaneIds().slice().reverse(); // track ล่างสุดวาดก่อน
   let vidRect = null; // กรอบภาพวิดีโอจริง (ไม่รวมแถบดำ) ของเลเยอร์บนสุดที่มองเห็น
@@ -981,8 +982,11 @@ function drawCompositeTo(ctx, cw, ch, sec) {
     vidRect = { x: dx, y: dy, w: dw, h: dh }; // เลเยอร์ล่าสุด = บนสุด
     ctx.save();
     ctx.globalAlpha = alpha;
-    ctx.filter = `brightness(${br}) contrast(${con}) saturate(${sat})` + (clip._presetFilter ? (' ' + clip._presetFilter) : '');
-    ctx.translate(cw / 2, ch / 2); ctx.rotate(rot); ctx.scale(scale, scale); ctx.translate(-cw / 2, -ch / 2);
+    // ⚡ iOS/Safari: ctx.filter (canvas CSS filter) ช้ามาก → ใส่เฉพาะตอนมีการปรับสี/preset จริง
+    const hasColor = (br !== 1 || con !== 1 || sat !== 1 || clip._presetFilter);
+    ctx.filter = hasColor ? (`brightness(${br}) contrast(${con}) saturate(${sat})` + (clip._presetFilter ? (' ' + clip._presetFilter) : '')) : 'none';
+    // ใส่ transform เฉพาะตอนมี scale/rotate จริง (ลดงานต่อเฟรม)
+    if (scale !== 1 || rot !== 0) { ctx.translate(cw / 2, ch / 2); ctx.rotate(rot); ctx.scale(scale, scale); ctx.translate(-cw / 2, -ch / 2); }
     try { ctx.drawImage(el, dx, dy, dw, dh); } catch (e) {}
     ctx.restore();
   });
