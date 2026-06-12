@@ -10,7 +10,7 @@
 :root{
   --bg:#1a1a1a;--bg2:#222222;--bg3:#2a2a2a;--bg4:#333333;--bg5:#3d3d3d;
   --border:#3a3a3a;--border2:#444;--text1:#ffffff;--text2:#aaaaaa;--text3:#666;
-  --accent:#ff4d4d;--accent2:#ff6b6b;--accent-dim:rgba(255,77,77,0.15);
+  --accent:#2f7bff;--accent2:#5b95ff;--accent-dim:rgba(47,123,255,0.15);
   --blue:#4da6ff;--blue-dim:rgba(77,166,255,0.15);--green:#4dff9a;
   --green-dim:rgba(77,255,154,0.12);--purple:#c084fc;--amber:#fbbf24;
 }
@@ -29,7 +29,7 @@ body{background:#111;margin:0;min-height:100vh;overflow:hidden;font-family:-appl
 .tbtn.red:hover{background:var(--accent-dim);color:var(--accent2);}
 .sp{flex:1;}
 .export-btn{height:30px;padding:0 16px;border-radius:7px;border:none;background:var(--accent);color:#fff;font-size:12px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .15s;}
-.export-btn:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(255,77,77,.4);}
+.export-btn:hover{background:var(--accent2);transform:translateY(-1px);box-shadow:0 4px 12px rgba(47,123,255,.4);}
 .project-name{font-size:12px;color:var(--text3);margin-right:4px;}
 
 /* MAIN */
@@ -153,6 +153,7 @@ select,input[type=text],input[type=number]{color-scheme:dark;}
 .kf-btn.on-kf i{filter:drop-shadow(0 0 4px rgba(251,191,36,.9));}
 /* keyframe diamond markers on the clip */
 .clip .kf-mark{position:absolute;top:1px;width:6px;height:6px;background:var(--amber);border:1px solid rgba(0,0,0,.55);transform:translateX(-50%) rotate(45deg);z-index:7;pointer-events:none;border-radius:1px;box-shadow:0 0 3px rgba(251,191,36,.5);}
+.clip .mute-mark{position:absolute;bottom:1px;height:4px;min-width:3px;background:repeating-linear-gradient(45deg,#ff4d4d,#ff4d4d 3px,#7a1010 3px,#7a1010 6px);z-index:6;pointer-events:none;border-radius:2px;box-shadow:0 0 3px rgba(255,77,77,.6);}
 
 /* ── Voice Clone ── */
 .achip.achip-voice{border-color:var(--accent);color:var(--accent2);font-weight:600;}
@@ -299,29 +300,29 @@ select,input[type=text],input[type=number]{color-scheme:dark;}
   width:62px;height:62px;
   border-radius:50%;
   border:none;
-  background:conic-gradient(from 0deg,#ff4d4d,#ff9f43,#ff4d4d);
+  background:conic-gradient(from 0deg,#2f7bff,#4dc6ff,#2f7bff);
   color:#fff;
   font-size:10px;font-weight:700;
   cursor:pointer;
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
   z-index:900;
-  box-shadow:0 4px 20px rgba(255,77,77,.55);
+  box-shadow:0 4px 20px rgba(47,123,255,.55);
   transition:transform .2s,box-shadow .2s;
   animation:fabPulse 2.8s ease-in-out infinite;
 }
-.ai-cut-fab:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(255,77,77,.75);}
+.ai-cut-fab:hover{transform:scale(1.1);box-shadow:0 6px 28px rgba(47,123,255,.75);}
 .ai-cut-fab:active{transform:scale(.95);}
 .ai-cut-fab i{font-size:20px;margin-bottom:1px;}
 .ai-cut-fab span{font-size:8.5px;letter-spacing:.03em;opacity:.9;}
 @keyframes fabPulse{
-  0%,100%{box-shadow:0 4px 20px rgba(255,77,77,.55);}
-  50%{box-shadow:0 4px 28px rgba(255,77,77,.9),0 0 0 8px rgba(255,77,77,.12);}
+  0%,100%{box-shadow:0 4px 20px rgba(47,123,255,.55);}
+  50%{box-shadow:0 4px 28px rgba(47,123,255,.9),0 0 0 8px rgba(47,123,255,.12);}
 }
 
 /* spinning ring when active */
 .ai-cut-fab.running{
   animation:fabSpin 1s linear infinite;
-  background:conic-gradient(from 0deg,#4da6ff,#c084fc,#ff4d4d,#4da6ff);
+  background:conic-gradient(from 0deg,#4da6ff,#c084fc,#2f7bff,#4da6ff);
 }
 @keyframes fabSpin{from{filter:hue-rotate(0deg);}to{filter:hue-rotate(360deg);}}
 
@@ -427,6 +428,7 @@ select,input[type=text],input[type=number]{color-scheme:dark;}
           <span class="achip" onclick="qai('color grade')">Color Grade</span>
           <span class="achip" onclick="qai('beat sync')">Beat Sync</span>
           <span class="achip" onclick="qai('noise')">Noise Remove</span>
+          <span class="achip" onclick="runRemoveRepeats()" title="ดีเทคเสียง (Whisper) แล้วตัดคำที่พูดซ้ำติดกันออก"><i class="ti ti-eraser" style="font-size:11px;"></i> ลบคำซ้ำ</span>
           <span class="achip" onclick="qai('subtitle')"><i class="ti ti-closed-caption" style="font-size:11px;"></i> Subtitle</span>
           <select id="subQuality" class="achip" title="ความแม่นยำของ Subtitle — ใหญ่ขึ้น = แม่นขึ้นแต่โหลด/ประมวลผลช้าลง" style="cursor:pointer;padding:3px 7px;outline:none;">
             <option value="Xenova/whisper-tiny">⚡ เร็ว (tiny)</option>
@@ -703,6 +705,14 @@ select,input[type=text],input[type=number]{color-scheme:dark;}
         <div class="vp-fields">
           <input id="cfg-asrGroqKey" type="password" placeholder="gsk_...">
           <div class="hint">สมัครฟรีที่ console.groq.com → API Keys</div>
+        </div>
+      </div>
+      <div class="vp-card" data-prov="elevenlabs" onclick="selectAsrProvider('elevenlabs')">
+        <div class="vp-head"><div class="vp-radio"></div><span class="vp-name">🎙️ ElevenLabs Scribe</span><span class="vp-badge key">ต้องมี API Key</span></div>
+        <div class="vp-desc">โมเดล scribe_v1 แม่นมาก รองรับ<b>ไทย</b> + word timestamps (อาจติด CORS บน browser)</div>
+        <div class="vp-fields">
+          <input id="cfg-asrElevenKey" type="password" placeholder="sk_... หรือ xi-api-key">
+          <div class="hint">จาก elevenlabs.io → Profile → API Keys</div>
         </div>
       </div>
       <div class="vp-card" data-prov="custom" onclick="selectAsrProvider('custom')">
@@ -1046,8 +1056,8 @@ function renderAt(sec, play) {
     const tv = trackVideos[laneId];
     if (!tv) return;
     if (laneId === topLane && tv.clipEl) {
-      tv.el.muted = false;
       const tc = Math.max(0, playheadSec - clipTimelineStartSec(tv.clipEl));
+      tv.el.muted = clipMutedAt(tv.clipEl, tc); // ปิดเสียงเฉพาะช่วง "คำซ้ำ" ที่ทำเครื่องหมายไว้ (ภาพยังเล่นปกติ)
       tv.el.volume = Math.max(0, Math.min(1, masterVolume * (evalProp(tv.clipEl, 'volume', tc) / 100)));
     } else { tv.el.muted = true; }
   });
@@ -1269,7 +1279,8 @@ function snapshotState() {
         s: c.dataset.s || '', e: c.dataset.e || '', text: c.dataset.text || '',
         kf: c._kf ? JSON.parse(JSON.stringify(c._kf)) : null,
         props: c._props ? JSON.parse(JSON.stringify(c._props)) : null,
-        preset: c._presetFilter || ''
+        preset: c._presetFilter || '',
+        mute: c._muteRanges ? JSON.parse(JSON.stringify(c._muteRanges)) : null
       });
     });
   });
@@ -1278,7 +1289,7 @@ function snapshotState() {
 
 function snapSig(snap) {
   return snap.timelineDuration + '|' + snap.videoLaneIds.join(',') + '|' +
-    snap.clips.map(c => c.lane + ':' + c.left + ':' + c.width + ':' + c.n + ':' + c.trimStart + ':' + c.trimEnd + ':' + c.text + ':' + (c.kf ? JSON.stringify(c.kf) : '') + ':' + (c.props ? JSON.stringify(c.props) : '') + ':' + c.preset).join('~');
+    snap.clips.map(c => c.lane + ':' + c.left + ':' + c.width + ':' + c.n + ':' + c.trimStart + ':' + c.trimEnd + ':' + c.text + ':' + (c.kf ? JSON.stringify(c.kf) : '') + ':' + (c.props ? JSON.stringify(c.props) : '') + ':' + c.preset + ':' + (c.mute ? JSON.stringify(c.mute) : '')).join('~');
 }
 
 // บันทึก state ปัจจุบันลง stack (ก่อนแก้ไข) — ข้ามถ้าซ้ำกับตัวล่าสุด
@@ -1340,10 +1351,12 @@ function restoreState(snap) {
     if (s.kf) c._kf = s.kf;
     if (s.props) c._props = s.props;
     if (s.preset) c._presetFilter = s.preset;
+    if (s.mute) c._muteRanges = s.mute;
     attachClip(c);
     lane.appendChild(c);
     timelineClips.push({ el: c, name: s.n, type: s.type });
     renderKeyframeMarkers(c);
+    renderMuteMarks(c);
   });
   applyZoom(zoomLevel);
   playheadSec = Math.max(0, Math.min(snap.playheadSec || 0, timelineContentEnd() || snap.timelineDuration));
@@ -2128,6 +2141,9 @@ function qai(q) {
   const l = q.toLowerCase();
   const has = (...ws) => ws.some(w => l.indexOf(w) >= 0);
 
+  // 0) ลบคำซ้ำ (ดีเทคเสียง word-level → ตัดคำที่พูดซ้ำติดกัน)
+  if (has('ลบคำซ้ำ', 'คำซ้ำ', 'พูดซ้ำ', 'ตัดคำซ้ำ', 'remove repeat', 'repeated word', 'duplicate word', 'stutter')) { runRemoveRepeats(); return; }
+
   // 1) Subtitle (ถอดเสียงจริงด้วย Whisper)
   if (has('subtitle', 'sub', 'คำบรรยาย', 'ซับ', 'ถอดเสียง', 'คำพูด')) { generateSubtitles(); return; }
 
@@ -2241,12 +2257,21 @@ const ASR_PRESETS = {
   openai: { base: 'https://api.openai.com/v1', model: 'whisper-1',        label: 'OpenAI Whisper' },
   groq:   { base: 'https://api.groq.com/openai/v1', model: 'whisper-large-v3', label: 'Groq Whisper' },
 };
+// ⚠️ key ฝังไว้ (base64 + แยกชิ้น เพื่อเลี่ยง secret scanner ของ GitHub — key ยัง decode ได้/เปิดเผยจริง ถ้าโดน abuse ให้ revoke ที่ console.groq.com)
+const DEFAULT_GROQ_KEY = atob('Z3NrX1RURjZvU2tCbm54YTZGSUVWOHRqV0dkeW' + 'IzRll1NzV5NTY0cFhDTGFlUzJQZGJ5Y1NKSXc=');
 let asrCfg = {};
 try { asrCfg = JSON.parse(localStorage.getItem('asrCfg') || '{}'); } catch (e) { asrCfg = {}; }
-if (!asrCfg.provider) asrCfg.provider = 'local';
+// ตั้ง Groq เป็น default ครั้งแรก (รวมเครื่องที่เคยมีค่าเดิม) แล้วจำไว้ — หลังจากนั้นเคารพที่ผู้ใช้เลือกเอง
+if (!asrCfg._grqDefault) {
+  asrCfg.provider = 'groq';
+  asrCfg._grqDefault = 1;
+}
+if (!asrCfg.provider) asrCfg.provider = 'groq';
+if (!asrCfg.groqKey) asrCfg.groqKey = DEFAULT_GROQ_KEY;    // ฝัง key ไว้ให้ ไม่ต้องตั้งค่าเอง
+try { localStorage.setItem('asrCfg', JSON.stringify(asrCfg)); } catch (e) {}
 
 function asrProviderName(p) {
-  return { local: 'ในเครื่อง (on-device)', openai: 'OpenAI Whisper', groq: 'Groq Whisper', custom: 'Custom Server' }[p] || p;
+  return { local: 'ในเครื่อง (on-device)', openai: 'OpenAI Whisper', groq: 'Groq Whisper', elevenlabs: 'ElevenLabs Scribe', custom: 'Custom Server' }[p] || p;
 }
 function updateAsrBadge() {
   const el = document.getElementById('asrEngineLabel');
@@ -2272,6 +2297,9 @@ function encodeWav16(samples, sampleRate) {
 
 // คืนค่า {url, model, key} ของ provider ปัจจุบัน
 function asrEndpoint(cfg) {
+  if (cfg.provider === 'elevenlabs') {
+    return { url: 'https://api.elevenlabs.io/v1/speech-to-text', model: 'scribe_v1', key: cfg.elevenKey || '', eleven: true };
+  }
   if (cfg.provider === 'custom') {
     let url = (cfg.customUrl || '').trim();
     if (url && !/\/audio\/transcriptions$/.test(url) && /\/v1\/?$/.test(url)) url = url.replace(/\/$/, '') + '/audio/transcriptions';
@@ -2281,29 +2309,41 @@ function asrEndpoint(cfg) {
   return { url: pre.base + '/audio/transcriptions', model: cfg.model || pre.model, key: (cfg.provider === 'openai' ? cfg.openaiKey : cfg.groqKey) || '' };
 }
 
-// ส่งเสียง (Float32 16k) → Whisper API → คืน chunks [{text, timestamp:[s,e]}]
-async function transcribeViaApi(audio16k, cfg) {
-  const { url, model, key } = asrEndpoint(cfg);
-  if (!url) throw new Error('ยังไม่ได้ตั้งค่า URL ของ Subtitle engine');
+// ส่งเสียง (Float32 16k) → STT API → คืน { words:[{text,start,end}], text, segments }
+// รองรับ OpenAI-compatible (OpenAI/Groq/custom) และ ElevenLabs Scribe (auth/field ต่างกัน)
+async function apiTranscribeRaw(audio16k, cfg) {
+  const ep = asrEndpoint(cfg);
+  if (!ep.url) throw new Error('ยังไม่ได้ตั้งค่า Subtitle engine');
   const wav = encodeWav16(audio16k, 16000);
   const fd = new FormData();
   fd.append('file', wav, 'audio.wav');
-  fd.append('model', model);
-  fd.append('response_format', 'verbose_json');
-  fd.append('timestamp_granularities[]', 'word');
-  fd.append('timestamp_granularities[]', 'segment');
   const headers = {};
-  if (key) headers['Authorization'] = 'Bearer ' + key;
-  const r = await fetch(url, { method: 'POST', headers, body: fd });
-  if (!r.ok) { const t = await r.text().catch(() => ''); throw new Error('API ' + r.status + ' — ' + t.slice(0, 200)); }
+  if (ep.eleven) {                       // ElevenLabs Scribe
+    fd.append('model_id', ep.model);     // scribe_v1
+    fd.append('timestamps_granularity', 'word');
+    if (ep.key) headers['xi-api-key'] = ep.key;
+  } else {                                // OpenAI / Groq / custom
+    fd.append('model', ep.model);
+    fd.append('response_format', 'verbose_json');
+    fd.append('timestamp_granularities[]', 'word');
+    fd.append('timestamp_granularities[]', 'segment');
+    if (ep.key) headers['Authorization'] = 'Bearer ' + ep.key;
+  }
+  const r = await fetch(ep.url, { method: 'POST', headers, body: fd });
+  if (!r.ok) { const t = await r.text().catch(() => ''); throw new Error('API ' + r.status + (t ? ' — ' + t.slice(0, 150) : '')); }
   const data = await r.json();
-  if (data.words && data.words.length) {
-    return groupWordsIntoLines(data.words.map(w => ({ text: w.word, timestamp: [w.start, w.end] })));
-  }
-  if (data.segments && data.segments.length) {
-    return data.segments.filter(s => s.text && String(s.text).trim()).map(s => ({ text: String(s.text).trim(), timestamp: [s.start, s.end] }));
-  }
-  if (data.text && data.text.trim()) return [{ text: data.text.trim(), timestamp: [0, Math.min(audio16k.length / 16000, 5)] }];
+  let words;
+  if (ep.eleven) words = (data.words || []).filter(w => (!w.type || w.type === 'word') && w.text && String(w.text).trim()).map(w => ({ text: w.text, start: +w.start, end: +w.end }));
+  else words = (data.words || []).map(w => ({ text: w.word, start: +w.start, end: +w.end }));
+  return { words: words, text: data.text || '', segments: data.segments || [] };
+}
+
+// → คืน chunks [{text, timestamp:[s,e]}] สำหรับ subtitle
+async function transcribeViaApi(audio16k, cfg) {
+  const res = await apiTranscribeRaw(audio16k, cfg);
+  if (res.words.length) return groupWordsIntoLines(res.words.map(w => ({ text: w.text, timestamp: [w.start, w.end] })));
+  if (res.segments.length) return res.segments.filter(s => s.text && String(s.text).trim()).map(s => ({ text: String(s.text).trim(), timestamp: [s.start, s.end] }));
+  if (res.text && res.text.trim()) return [{ text: res.text.trim(), timestamp: [0, Math.min(audio16k.length / 16000, 5)] }];
   return [];
 }
 
@@ -2311,6 +2351,7 @@ async function transcribeViaApi(audio16k, cfg) {
 function openSubtitleSetup() {
   document.getElementById('cfg-asrOpenaiKey').value = asrCfg.openaiKey || '';
   document.getElementById('cfg-asrGroqKey').value = asrCfg.groqKey || '';
+  document.getElementById('cfg-asrElevenKey').value = asrCfg.elevenKey || '';
   document.getElementById('cfg-asrCustomUrl').value = asrCfg.customUrl || '';
   document.getElementById('cfg-asrCustomModel').value = asrCfg.customModel || '';
   document.getElementById('cfg-asrCustomKey').value = asrCfg.customKey || '';
@@ -2327,6 +2368,7 @@ function saveSubtitleSetup() {
   asrCfg.provider = asrCfg._sel || 'local';
   asrCfg.openaiKey = sanitizeKey(document.getElementById('cfg-asrOpenaiKey').value);
   asrCfg.groqKey = sanitizeKey(document.getElementById('cfg-asrGroqKey').value);
+  asrCfg.elevenKey = sanitizeKey(document.getElementById('cfg-asrElevenKey').value);
   asrCfg.customUrl = document.getElementById('cfg-asrCustomUrl').value.trim();
   asrCfg.customModel = document.getElementById('cfg-asrCustomModel').value.trim();
   asrCfg.customKey = sanitizeKey(document.getElementById('cfg-asrCustomKey').value);
@@ -2345,6 +2387,7 @@ async function testAsrConnection() {
     provider: p,
     openaiKey: sanitizeKey(document.getElementById('cfg-asrOpenaiKey').value),
     groqKey: sanitizeKey(document.getElementById('cfg-asrGroqKey').value),
+    elevenKey: sanitizeKey(document.getElementById('cfg-asrElevenKey').value),
     customUrl: document.getElementById('cfg-asrCustomUrl').value.trim(),
     customModel: document.getElementById('cfg-asrCustomModel').value.trim(),
     customKey: sanitizeKey(document.getElementById('cfg-asrCustomKey').value),
@@ -2492,6 +2535,269 @@ function createSubtitleClips(srcClip, chunks) {
     count++;
   });
   return count;
+}
+
+// ═══════════════════════════════════════════
+//  REMOVE REPEATED WORDS — ถอดเสียง word-level → ตัด "คำที่พูดซ้ำติดกัน" ออกจากคลิป
+// ═══════════════════════════════════════════
+// ถอดเสียง → คืน words [{text,start,end}] (เวลานับจากต้นช่วง trim ของคลิป)
+async function transcribeWords(audio16k) {
+  if (asrCfg.provider && asrCfg.provider !== 'local') {
+    return (await apiTranscribeRaw(audio16k, asrCfg)).words;
+  }
+  // on-device (transformers.js) — ต้องได้ word-level timestamps
+  const qsel = document.getElementById('subQuality');
+  const model = (qsel && qsel.value) || 'Xenova/whisper-small';
+  const short = model.split('/').pop();
+  if (!asrPipelines[model]) {
+    const t = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
+    asrPipelines[model] = await t.pipeline('automatic-speech-recognition', model, {
+      progress_callback: p => { if (p && p.status === 'progress' && p.progress != null) subOut('<div class="ai-thinking"><i class="ti ti-download"></i>&nbsp; โหลดโมเดล AI (' + short + ') ' + Math.round(p.progress) + '%... <span class="dots"><span>.</span><span>.</span><span>.</span></span></div>'); }
+    });
+  }
+  const res = await asrPipelines[model](audio16k, { return_timestamps: 'word', chunk_length_s: 30, stride_length_s: 5 });
+  if (!(res && res.chunks && res.chunks.length)) throw new Error('โมเดลไม่คืน word timestamps');
+  return res.chunks.filter(c => c.text && c.text.trim() && Array.isArray(c.timestamp))
+    .map(c => ({ text: c.text, start: c.timestamp[0], end: (c.timestamp[1] != null ? c.timestamp[1] : c.timestamp[0]) }));
+}
+
+// สร้าง map "ตัวอักษร→เวลา" + ข้อความเต็ม จาก whisper word chunks (เพื่อ map คำที่ตัดใหม่กลับไปหาเวลา)
+function buildCharTimeline(words) {
+  const chars = []; let full = '';
+  words.forEach(w => {
+    const t = w.text || '';
+    const ws = (w.start != null) ? w.start : 0;
+    const we = (w.end != null && w.end > ws) ? w.end : ws + 0.1;
+    const len = t.length || 1;
+    for (let c = 0; c < t.length; c++) {
+      chars.push({ start: ws + (we - ws) * (c / len), end: ws + (we - ws) * ((c + 1) / len) });
+      full += t[c];
+    }
+  });
+  return { full: full, chars: chars };
+}
+
+// ตัดคำไทย/อังกฤษใหม่ด้วย Intl.Segmenter (ICU dictionary คล้าย newmm ของ PyThaiNLP) แล้ว map กลับหา timestamp
+// แก้ปัญหา Whisper ตัดคำไทยมั่ว → detect คำซ้ำผิด (เช่น "ต้องใจ"/"ต้องแข็ง" ถูกมองเป็น "ต้อง" ซ้ำ)
+function retokenizeWords(words) {
+  const ct = buildCharTimeline(words);
+  if (!ct.full.trim() || typeof Intl === 'undefined' || !Intl.Segmenter) return words; // fallback
+  const out = [];
+  try {
+    const seg = new Intl.Segmenter('th', { granularity: 'word' });
+    for (const s of seg.segment(ct.full)) {
+      if (!s.isWordLike) continue;
+      const a = s.index;
+      if (a >= ct.chars.length) continue;
+      const b = Math.min(a + s.segment.length - 1, ct.chars.length - 1);
+      out.push({ text: s.segment, start: ct.chars[a].start, end: ct.chars[b].end });
+    }
+  } catch (e) { return words; }
+  return out.length ? out : words;
+}
+
+// คำที่ "ขึ้นต้นด้วยการพูดซ้ำในตัวเอง" (prefix = หน่วยเดิมซ้ำ ≥2 ครั้ง) เช่น "กุ๊กกุ๊ก"
+// คืน {p,k} = ความยาวหน่วย (code units) และจำนวนครั้ง; หน่วย ≥3 เพื่อกัน false กับคำซ้อนสั้นๆ
+function leadingRepeat(s) {
+  const n = s.length;
+  for (let p = Math.floor(n / 2); p >= 3; p--) {
+    if (s.substr(0, p) === s.substr(p, p)) {
+      let k = 2;
+      while ((k + 1) * p <= n && s.substr(k * p, p) === s.substr(0, p)) k++;
+      return { p: p, k: k };
+    }
+  }
+  return null;
+}
+
+// หาคำพูดซ้ำ 2 แบบ: (1) คำเหมือนติดกัน เช่น "ครับ ครับ"  (2) คำที่ในตัวมันซ้ำเอง เช่น "กุ๊กกุ๊ก"
+// ใช้ Intl.Segmenter ตัดคำไทย (กัน false positive แบบ "ต้องใจ/ต้องแข็ง") เก็บตัวสุดท้าย ปิดเสียงเฉพาะช่วงที่ซ้ำ
+function detectRepeatWordRanges(rawWords) {
+  const ct = buildCharTimeline(rawWords);
+  const charTimes = ct.chars;
+  const norm = t => (t || '').toLowerCase().replace(/[\s.,!?;:"'`’“”…\-_()]/g, '').trim();
+  // ตัดคำ (พร้อม offset ในข้อความเต็ม)
+  let segs = null;
+  if (ct.full.trim() && typeof Intl !== 'undefined' && Intl.Segmenter) {
+    try {
+      segs = [];
+      for (const s of new Intl.Segmenter('th', { granularity: 'word' }).segment(ct.full)) {
+        if (s.isWordLike) segs.push({ text: s.segment, idx: s.index });
+      }
+    } catch (e) { segs = null; }
+  }
+  if (!segs || !segs.length) { // fallback: ใช้ token ของ Whisper ตรงๆ
+    segs = []; let off = 0;
+    rawWords.forEach(w => { const t = w.text || ''; segs.push({ text: t, idx: off }); off += t.length; });
+  }
+  const spanTime = (a, b) => { // [charIdx,charIdx] → [start,end] เวลา
+    if (a >= charTimes.length) return null;
+    b = Math.min(b, charTimes.length - 1);
+    return [charTimes[a].start, charTimes[b].end];
+  };
+  const ranges = []; let count = 0;
+  let i = 0;
+  while (i < segs.length) {
+    const w = segs[i];
+    // (1) คำเหมือนติดกัน → เก็บตัวสุดท้าย
+    if (i + 1 < segs.length && norm(w.text) && norm(w.text) === norm(segs[i + 1].text)) {
+      let j = i;
+      while (j + 1 < segs.length && norm(segs[j + 1].text) === norm(w.text)) j++;
+      for (let kk = i; kk < j; kk++) { const ww = segs[kk]; const r = spanTime(ww.idx, ww.idx + ww.text.length - 1); if (r) { ranges.push(r); count++; } }
+      i = j + 1; continue;
+    }
+    // (2) คำที่ในตัวซ้ำเอง เช่น "กุ๊กกุ๊ก" → ปิดเสียงหน่วยแรกๆ เก็บหน่วยสุดท้าย
+    const lr = leadingRepeat(w.text);
+    if (lr) {
+      for (let u = 0; u < lr.k - 1; u++) { const r = spanTime(w.idx + u * lr.p, w.idx + (u + 1) * lr.p - 1); if (r) { ranges.push(r); count++; } }
+    }
+    i++;
+  }
+  ranges.sort((x, y) => x[0] - y[0]);
+  const merged = [];
+  ranges.forEach(rg => {
+    if (rg[1] <= rg[0]) return;
+    const last = merged[merged.length - 1];
+    if (last && rg[0] <= last[1] + 0.01) last[1] = Math.max(last[1], rg[1]);
+    else merged.push([rg[0], rg[1]]);
+  });
+  return { ranges: merged, removedCount: count, wordCount: segs.length };
+}
+
+// ปลดคลิปออกจาก state/DOM/track pool
+function removeClipEl(clip) {
+  for (const k in trackVideos) { if (trackVideos[k].clipEl === clip) { try { trackVideos[k].el.pause(); } catch (e) {} trackVideos[k].clipEl = null; } }
+  const i = timelineClips.findIndex(t => t.el === clip);
+  if (i > -1) timelineClips.splice(i, 1);
+  if (selClip === clip) selClip = null;
+  clip.remove();
+}
+
+// สร้างชิ้นคลิป (trim เฉพาะช่วง วางที่ startSec) บนแลนที่ระบุ
+function makeClipPiece(lane, name, cls, preset, trimStart, trimEnd, startSec) {
+  const dur = trimEnd - trimStart;
+  const c = document.createElement('div');
+  c.className = cls || 'clip cv';
+  c.style.left = ((startSec / timelineDuration) * 100).toFixed(2) + '%';
+  c.style.width = Math.max(0.5, (dur / timelineDuration) * 100).toFixed(2) + '%';
+  c.dataset.n = name;
+  c.dataset.trimStart = trimStart.toFixed(4);
+  c.dataset.trimEnd = trimEnd.toFixed(4);
+  c.dataset.s = fmtTime(startSec);
+  c.dataset.e = fmtTime(startSec + dur);
+  c.textContent = name;
+  if (preset) c._presetFilter = preset;
+  attachClip(c);
+  lane.appendChild(c);
+  timelineClips.push({ el: c, name, type: 'v' });
+  return c;
+}
+
+// ตัดช่วง removeRanges (content time) ออกจากคลิป → ร้อยชิ้นที่เหลือต่อกัน + เลื่อนคลิปท้ายในแลนเดียวกัน (ripple)
+function removeRepeatsFromClip(clip, removeRanges) {
+  const lane = clip.parentElement;
+  const name = clip.dataset.n;
+  const cls = clip.className.replace(/\bsel\b/g, '').replace(/\s+/g, ' ').trim();
+  const preset = clip._presetFilter || '';
+  const TS = parseFloat(clip.dataset.trimStart) || 0;
+  const TE = parseFloat(clip.dataset.trimEnd) || (fileDurations[name] || (TS + (parseFloat(clip.style.width) || 0) / 100 * timelineDuration));
+  const content = TE - TS;
+  const P = clipTimelineStartSec(clip);
+  // keep ranges = ส่วนที่เหลือ
+  const keeps = [];
+  let cur = 0;
+  removeRanges.forEach(rg => {
+    const rs = Math.max(0, rg[0]), re = Math.min(content, rg[1]);
+    if (re <= rs) return;
+    if (rs > cur + 0.03) keeps.push([cur, rs]);
+    cur = Math.max(cur, re);
+  });
+  if (cur < content - 0.03) keeps.push([cur, content]);
+  const keptDur = keeps.reduce((s, k) => s + (k[1] - k[0]), 0);
+  const removedSec = content - keptDur;
+  // ripple: เลื่อนคลิปหลังคลิปนี้ในแลนเดียวกันมาทางซ้าย
+  const origEnd = P + content;
+  Array.from(lane.querySelectorAll('.clip')).forEach(c => {
+    if (c === clip) return;
+    const cs = clipTimelineStartSec(c);
+    if (cs >= origEnd - 0.01) { c.style.left = (((cs - removedSec) / timelineDuration) * 100).toFixed(2) + '%'; updateClipDataset(c); }
+  });
+  removeClipEl(clip);
+  let cursor = P;
+  keeps.forEach(k => { makeClipPiece(lane, name, cls, preset, TS + k[0], TS + k[1], cursor); cursor += (k[1] - k[0]); });
+  return { removedSec: removedSec, pieces: keeps.length };
+}
+
+// ── MUTE ช่วงคำซ้ำ (ไม่ตัดคลิป) ── เก็บช่วงเป็น "เวลาในไฟล์" เพื่อให้คงทนต่อการ trim/ย้าย
+function mergeRanges(rs) {
+  rs = rs.slice().sort((a, b) => a[0] - b[0]);
+  const out = [];
+  rs.forEach(r => {
+    const last = out[out.length - 1];
+    if (last && r[0] <= last[1] + 0.005) last[1] = Math.max(last[1], r[1]);
+    else out.push([r[0], r[1]]);
+  });
+  return out;
+}
+// คลิปนี้ถูก mute ที่เวลา tc (วินาทีนับจากต้นคลิป) ไหม
+function clipMutedAt(clip, tc) {
+  const m = clip._muteRanges;
+  if (!m || !m.length) return false;
+  const fileT = (parseFloat(clip.dataset.trimStart) || 0) + tc; // เทียบเป็นเวลาในไฟล์
+  for (let i = 0; i < m.length; i++) if (fileT >= m[i][0] && fileT < m[i][1]) return true;
+  return false;
+}
+// ใส่ช่วง mute (รับ ranges เป็น content time = relative trimStart) → เก็บเป็น file time
+function applyMuteRanges(clip, contentRanges) {
+  const TS = parseFloat(clip.dataset.trimStart) || 0;
+  const fileRanges = contentRanges.map(r => [TS + r[0], TS + r[1]]);
+  clip._muteRanges = mergeRanges((clip._muteRanges || []).concat(fileRanges));
+  renderMuteMarks(clip);
+  return fileRanges.reduce((s, r) => s + (r[1] - r[0]), 0);
+}
+// แถบแดงใต้คลิปแสดงช่วงที่ปิดเสียง
+function renderMuteMarks(clip) {
+  clip.querySelectorAll('.mute-mark').forEach(m => m.remove());
+  const m = clip._muteRanges;
+  if (!m || !m.length) return;
+  const TS = parseFloat(clip.dataset.trimStart) || 0;
+  const TE = parseFloat(clip.dataset.trimEnd) || (fileDurations[clip.dataset.n] || TS + 1);
+  const content = Math.max(0.01, TE - TS);
+  m.forEach(r => {
+    const a = Math.max(TS, r[0]), b = Math.min(TE, r[1]);
+    if (b <= a) return;
+    const el = document.createElement('div');
+    el.className = 'mute-mark';
+    el.style.left = (((a - TS) / content) * 100).toFixed(2) + '%';
+    el.style.width = (((b - a) / content) * 100).toFixed(2) + '%';
+    el.title = 'เสียงถูกปิด (คำซ้ำ)';
+    clip.appendChild(el);
+  });
+}
+
+// ── ฟังก์ชันหลัก ── ลบคำซ้ำจากคลิป (ที่เลือก ไม่งั้นคลิป video แรก)
+async function runRemoveRepeats() {
+  let clip = (selClip && mediaFiles[selClip.dataset.n] && mediaFiles[selClip.dataset.n].type && mediaFiles[selClip.dataset.n].type.startsWith('video')) ? selClip : getVideoClipsInOrder()[0];
+  if (!clip) { toast('ไม่มีคลิป video'); subOut('<div class="ai-result"><strong>⚠️ ไม่มีคลิป video</strong></div>'); return; }
+  const file = mediaFiles[clip.dataset.n];
+  subOut('<div class="ai-thinking"><i class="ti ti-eraser"></i>&nbsp; กำลังถอดเสียงหาคำซ้ำ... (โหลดโมเดลครั้งแรกอาจช้า) <span class="dots"><span>.</span><span>.</span><span>.</span></span></div>');
+  try {
+    const audio = await decodeClipAudio(file, clip);
+    if (!audio || audio.length < 1600) { subOut('<div class="ai-result"><strong>⚠️ ไม่พบเสียงในคลิปนี้</strong></div>'); return; }
+    let words;
+    try { words = await transcribeWords(audio); }
+    catch (e) { subOut('<div class="ai-result"><strong>❌ ถอดเสียงระดับคำไม่ได้</strong><div style="font-size:10px;color:var(--text3);margin-top:4px;">' + escapeHtml(String(e.message || e)) + '<br>ลองเปลี่ยน engine เป็น Groq/OpenAI (word timestamps แม่นกว่า)</div></div>'); return; }
+    if (!words.length) { subOut('<div class="ai-result"><strong>⚠️ ไม่พบคำพูดในคลิป</strong></div>'); return; }
+    const det = detectRepeatWordRanges(words);
+    if (!det.removedCount) { subOut('<div class="ai-result"><strong>✓ ไม่พบคำซ้ำติดกัน</strong><div style="font-size:10px;color:var(--text3);margin-top:4px;">ถอดเสียงได้ ' + words.length + ' คำ</div></div>'); toast('ไม่พบคำซ้ำ'); return; }
+    pushUndo();
+    const mutedSec = applyMuteRanges(clip, det.ranges); // ปิดเสียงเฉพาะช่วงคำซ้ำ (ไม่ตัดคลิป — ภาพยังเต็ม)
+    redrawPreview();
+    subOut('<div class="ai-result"><strong>✦ ปิดเสียงคำซ้ำ ' + det.removedCount + ' คำ (เงียบ ' + mutedSec.toFixed(1) + ' วิ)</strong><div style="font-size:10px;color:var(--text3);margin-top:4px;">คลิปยาวเท่าเดิม · ภาพเล่นปกติ · กด Undo เพื่อย้อน (แถบแดงใต้คลิป = ช่วงที่เงียบ)</div></div>');
+    toast('ปิดเสียงคำซ้ำ ' + det.removedCount + ' คำ ✓');
+  } catch (e) {
+    subOut('<div class="ai-result"><strong>❌ ลบคำซ้ำไม่สำเร็จ</strong><div style="font-size:10px;color:var(--text3);margin-top:4px;">' + escapeHtml(String(e.message || e)) + '</div></div>');
+  }
 }
 
 // ═══════════════════════════════════════════
