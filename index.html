@@ -1003,22 +1003,34 @@ function subtitleAtTime(sec) {
   return best ? (best.dataset.text || best.textContent || '').trim() : null;
 }
 
-// ตัดบรรทัด — รองรับทั้งมีเว้นวรรค (อังกฤษ) และไม่มีเว้นวรรค (ไทย → ตัดทีละตัวอักษร)
+// ตัดบรรทัด subtitle ที่ "ขอบคำ" — ไทยใช้ Intl.Segmenter (ตัดคำไทย) อังกฤษใช้ช่องว่าง → ไม่ขึ้นบรรทัดกลางคำ
 function wrapSubtitle(ctx, text, maxW) {
-  const lines = []; let line = '';
-  text.split(/(\s+)/).forEach(chunk => {
-    if (chunk === '') return;
-    if (/^\s+$/.test(chunk)) { if (line && ctx.measureText(line + chunk).width <= maxW) line += chunk; return; }
-    if (ctx.measureText(line + chunk).width <= maxW) { line += chunk; return; }
-    if (line.trim()) { lines.push(line.trim()); line = ''; }
-    if (ctx.measureText(chunk).width <= maxW) { line = chunk; return; }
-    for (const ch of chunk) { // token ยาวเกิน (ไทยไม่มีช่องว่าง) → ตัดทีละตัว
-      if (ctx.measureText(line + ch).width > maxW && line) { lines.push(line); line = ch; }
-      else line += ch;
-    }
+  // แตกเป็นหน่วยคำ
+  let tokens;
+  try {
+    if (typeof Intl !== 'undefined' && Intl.Segmenter)
+      tokens = [...new Intl.Segmenter('th', { granularity: 'word' }).segment(text)].map(s => s.segment);
+    else throw 0;
+  } catch (e) { tokens = text.split(/(\s+)/); }
+  // สะสมเป็นบรรทัด ตัดที่ขอบคำเมื่อกว้างเกิน
+  let lines = []; let line = '';
+  tokens.forEach(tk => {
+    if (tk === '') return;
+    if (line && ctx.measureText((line + tk).trim()).width > maxW) {
+      lines.push(line.trim());
+      line = /^\s+$/.test(tk) ? '' : tk;
+    } else { line += tk; }
   });
   if (line.trim()) lines.push(line.trim());
-  return lines;
+  // เผื่อมีคำเดียวยาวเกินบรรทัด → ตัดทีละตัวอักษร
+  const out = [];
+  lines.forEach(ln => {
+    if (ctx.measureText(ln).width <= maxW) { out.push(ln); return; }
+    let cur = '';
+    for (const ch of ln) { if (cur && ctx.measureText(cur + ch).width > maxW) { out.push(cur); cur = ch; } else cur += ch; }
+    if (cur) out.push(cur);
+  });
+  return out;
 }
 
 // วาดข้อความ subtitle ภายในกรอบภาพวิดีโอ rect ({x,y,w,h}) — เล็ก อยู่แค่ส่วนล่าง
