@@ -2991,7 +2991,7 @@ async function runVoiceClone() {
       else throw new Error('ไม่รู้จัก provider');
       await placeAudioBlobOnA1(clip, blob);
     }
-    toast('โคลนเสียงสำเร็จ → วางบน A1 ✓');
+    toast('โคลนเสียงสำเร็จ → วางบน A1 · ตัดเสียงต้นฉบับแล้ว ✓');
     closeVoiceClone();
   } catch (err) {
     let msg = String((err && err.message) || err);
@@ -3102,9 +3102,28 @@ async function customTTS(text, refWav) {
   return await r.blob();
 }
 
+// ปิดเสียงต้นฉบับของคลิปวิดีโอทั้งคลิป (เหลือแต่เสียงที่โคลนบน A1)
+function muteClipAudio(clip) {
+  if (!clip) return;
+  ensureClipState(clip);
+  clip._props.volume = 0;        // เงียบสนิทตอนเล่น (tv.el.volume = 0)
+  clip._kf.volume = [];          // ลบ keyframe เสียง เพื่อไม่ให้ override ค่า 0
+  // แถบแดงใต้คลิป = ปิดเสียงทั้งคลิป (ครอบคลุมช่วง trim ทั้งหมด เป็น file-time)
+  const TS = parseFloat(clip.dataset.trimStart) || 0;
+  const TE = parseFloat(clip.dataset.trimEnd) || (fileDurations[clip.dataset.n] || TS + 1);
+  clip._muteRanges = [[TS, TE]];
+  renderMuteMarks(clip);
+  // อัปเดตสไลเดอร์ Volume ถ้าคลิปนี้ถูกเลือกอยู่
+  if (clip === selClip) {
+    const sl = document.getElementById('sl-vol'); if (sl) sl.value = 0;
+    const lb = document.getElementById('sv-vol'); if (lb) lb.textContent = '0%';
+  }
+}
+
 // วาง audio clip ที่โคลนแล้วบน A1 ตรงตำแหน่งคลิปต้นฉบับ
 function placeClonedAudioOnA1(srcClip, file, durSec) {
   pushUndo();
+  muteClipAudio(srcClip);        // ตัดเสียงในวิดีโอที่เลือก → เหลือแต่เสียงโคลนบน A1
   const la1 = document.getElementById('la1');
   const startTL = clipTimelineStartSec(srcClip);
   const leftPct = (startTL / timelineDuration) * 100;
@@ -3118,6 +3137,7 @@ function placeClonedAudioOnA1(srcClip, file, durSec) {
   c.title = 'Cloned voice';
   attachClip(c); la1.appendChild(c);
   timelineClips.push({ el: c, name: file.name, type: 'a' });
+  redrawPreview();               // ให้เสียงต้นฉบับเงียบทันทีในพรีวิว
 }
 
 // peak-normalize เสียง → ดังชัดขึ้น (แก้ปัญหาเสียงเบา)
